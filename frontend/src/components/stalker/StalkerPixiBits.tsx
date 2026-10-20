@@ -80,7 +80,6 @@ export function StalkerPill({
         style={style}
         x={left + padX}
         y={-metrics.height / 2}
-        resolution={2}
       />
     </pixiContainer>
   );

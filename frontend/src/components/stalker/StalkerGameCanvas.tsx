@@ -75,6 +75,9 @@ const USER_COLOR = 0x94a3b8;
 const NAME_MAX = 12;
 const FIT_PADDING = 1.08;
 const FIT_ANIMATION_MS = 250;
+/** Backing-store cap: 3× of 1280×1024 is ~12 MP, plenty for a 2.5× zoom. */
+const MAX_RESOLUTION = 3;
+const RESOLUTION_DEBOUNCE_MS = 150;
 const MINUTE_MS = 60_000;
 /** Agent id the attention popup uses for the main Claude session. */
 const BOSS_FOCUS_ID = "boss";
@@ -161,6 +164,36 @@ export function StalkerGameCanvas(): ReactNode {
       performSoftReset();
     };
   }, []);
+
+  // Render at the size the map is actually shown at. The 1280×1024 canvas is
+  // CSS-scaled to fit (and zoomed by the user), so a 1× backing store looks
+  // soft on 1× displays — Retina's 2× hid that in development.
+  const resolutionTimer = useRef<number | undefined>(undefined);
+  const applyResolution = useCallback((zoom: number) => {
+    const app = appRef.current;
+    if (!app) {
+      return;
+    }
+    const dpr = window.devicePixelRatio || 1;
+    const target = Math.min(
+      MAX_RESOLUTION,
+      Math.max(1, Math.ceil(dpr * zoom * 2) / 2),
+    );
+    if (app.renderer.resolution !== target) {
+      app.renderer.resize(CANVAS_WIDTH, CANVAS_HEIGHT, target);
+    }
+  }, []);
+  const scheduleResolution = useCallback(
+    (zoom: number) => {
+      window.clearTimeout(resolutionTimer.current);
+      resolutionTimer.current = window.setTimeout(
+        () => applyResolution(zoom),
+        RESOLUTION_DEBOUNCE_MS,
+      );
+    },
+    [applyResolution],
+  );
+  useEffect(() => () => window.clearTimeout(resolutionTimer.current), []);
 
   // Fit the whole floor into the panel and keep it centred on resize.
   const fitToView = useCallback((animationMs = 0) => {
@@ -302,6 +335,7 @@ export function StalkerGameCanvas(): ReactNode {
           limitToBounds={false}
           wheel={{ step: 0.08 }}
           doubleClick={{ disabled: true }}
+          onTransform={(_ref, state) => scheduleResolution(state.scale)}
         >
           <StalkerZoomControls onFit={() => fitToView(FIT_ANIMATION_MS)} />
           <TransformComponent
@@ -318,6 +352,7 @@ export function StalkerGameCanvas(): ReactNode {
                 height={CANVAS_HEIGHT}
                 backgroundColor={0xeef2f6}
                 autoDensity
+                antialias
                 resolution={
                   typeof window !== "undefined"
                     ? window.devicePixelRatio || 1
@@ -326,6 +361,7 @@ export function StalkerGameCanvas(): ReactNode {
                 onInit={(app) => {
                   appRef.current = app;
                   app.stage.sortableChildren = true;
+                  applyResolution(transformRef.current?.state.scale ?? 1);
                 }}
               >
                 <>

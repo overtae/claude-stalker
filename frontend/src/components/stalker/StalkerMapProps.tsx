@@ -282,7 +282,6 @@ export function NewsTicker(): ReactNode {
         x={width}
         y={1}
         mask={mask}
-        resolution={2}
         style={{
           fontFamily: "Pretendard, system-ui, sans-serif",
           fontSize: 10,
@@ -374,7 +373,6 @@ export function CozyCat(): ReactNode {
         x={-2}
         y={-30}
         style={{ fontSize: 11 }}
-        resolution={2}
       />
     </pixiContainer>
   );
