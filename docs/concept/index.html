@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Claude Stalker — 비주얼 컨셉 A / B / C</title>
+    <style>
+      :root {
+        --bg: #0c0e14;
+        --text: #e8ecf4;
+        --muted: #8b93a8;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Pretendard", "Apple SD Gothic Neo", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+      }
+      header {
+        padding: 2rem 1.5rem 1rem;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      header h1 {
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin: 0 0 0.35rem;
+      }
+      header p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1.25rem;
+        padding: 1rem 1.5rem 3rem;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      .card {
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #12151f;
+      }
+      .card-head {
+        padding: 1rem 1.1rem 0.5rem;
+      }
+      .card-head h2 {
+        margin: 0;
+        font-size: 1rem;
+      }
+      .card-head span {
+        font-size: 0.75rem;
+        color: var(--muted);
+      }
+      .stage-wrap {
+        aspect-ratio: 4 / 3;
+        position: relative;
+        overflow: hidden;
+      }
+      .stage-wrap svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .legend {
+        padding: 0.75rem 1.1rem 1.1rem;
+        font-size: 0.72rem;
+        color: var(--muted);
+      }
+      .legend kbd {
+        background: rgba(255, 255, 255, 0.06);
+        padding: 0.1rem 0.35rem;
+        border-radius: 4px;
+      }
+
+      /* Shared animation timeline: 12s loop */
+      @keyframes walkArchive {
+        0%,
+        8% {
+          transform: translate(0, 0);
+        }
+        22%,
+        35% {
+          transform: translate(-42px, -18px);
+        }
+        50%,
+        62% {
+          transform: translate(38px, 8px);
+        }
+        78%,
+        100% {
+          transform: translate(72px, -28px);
+        }
+      }
+      @keyframes ledPulse {
+        0%,
+        35% {
+          opacity: 0.35;
+        }
+        50%,
+        62% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0.35;
+        }
+      }
+      @keyframes ledFast {
+        0%,
+        35% {
+          opacity: 0.3;
+        }
+        50% {
+          opacity: 1;
+        }
+        52% {
+          opacity: 0.2;
+        }
+        54% {
+          opacity: 1;
+        }
+        56% {
+          opacity: 0.2;
+        }
+        58%,
+        62% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0.3;
+        }
+      }
+      @keyframes elevMove {
+        0%,
+        70% {
+          transform: translateY(0);
+        }
+        85% {
+          transform: translateY(-28px);
+        }
+        100% {
+          transform: translateY(0);
+        }
+      }
+      @keyframes bubbleIn {
+        0%,
+        18% {
+          opacity: 0;
+          transform: scale(0.8);
+        }
+        24%,
+        34% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        40%,
+        100% {
+          opacity: 0;
+        }
+      }
+      @keyframes explorePop {
+        0%,
+        72% {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        80%,
+        95% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+
+      .agent-a {
+        animation: walkArchive 12s ease-in-out infinite;
+      }
+      .agent-b {
+        animation: walkArchive 12s ease-in-out infinite;
+      }
+      .agent-c {
+        animation: walkArchive 12s ease-in-out infinite;
+      }
+      .led-a {
+        animation: ledFast 12s linear infinite;
+      }
+      .led-b {
+        animation: ledPulse 12s ease-in-out infinite;
+      }
+      .led-c {
+        animation: ledFast 12s linear infinite;
+      }
+      .elev-a {
+        animation: elevMove 12s ease-in-out infinite;
+      }
+      .elev-b {
+        animation: elevMove 12s ease-in-out infinite;
+      }
+      .elev-c {
+        animation: elevMove 12s ease-in-out infinite;
+      }
+      .bubble-a,
+      .bubble-b,
+      .bubble-c {
+        animation: bubbleIn 12s ease-out infinite;
+      }
+      .explore-a,
+      .explore-b,
+      .explore-c {
+        animation: explorePop 12s ease-out infinite;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Claude Stalker — 비주얼 컨셉</h1>
+      <p>
+        동일 시나리오(자료실 → 서버실 LED → Explore 엘리베이터) · A Premium Pixel · B
+        Cozy Isometric · C Soft Flat
+      </p>
+    </header>
+
+    <div class="gallery">
+      <!-- A: Premium Pixel -->
+      <article class="card">
+        <div class="card-head">
+          <h2>A · Premium Pixel</h2>
+          <span>네온 앰비언트 · 서버실 LED 펄스</span>
+        </div>
+        <div class="stage-wrap">
+          <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="bgA" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#0a0f1a" />
+                <stop offset="100%" stop-color="#151a2e" />
+              </linearGradient>
+              <filter id="glowA">
+                <feGaussianBlur stdDeviation="2" result="b" />
+                <feMerge>
+                  <feMergeNode in="b" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            <rect width="400" height="300" fill="url(#bgA)" />
+            <!-- floor panel -->
+            <rect x="8" y="8" width="72" height="284" rx="4" fill="#0d1220" stroke="#2a3555" />
+            <text x="16" y="28" fill="#6ee7b7" font-size="8" font-family="monospace">● 3F active</text>
+            <text x="16" y="48" fill="#94a3b8" font-size="7" font-family="monospace">2F proj-b</text>
+            <text x="16" y="62" fill="#64748b" font-size="7" font-family="monospace">1F proj-a</text>
+            <!-- rooms grid -->
+            <g transform="translate(88, 24)">
+              <rect width="120" height="70" fill="#1a2238" stroke="#3d4f7a" />
+              <text x="8" y="16" fill="#a5b4fc" font-size="8">자료실</text>
+              <rect x="90" y="0" width="120" height="70" fill="#1a2238" stroke="#3d4f7a" />
+              <text x="98" y="16" fill="#a5b4fc" font-size="8">개발실</text>
+              <rect y="78" width="120" height="70" fill="#1a2238" stroke="#3d4f7a" />
+              <text x="8" y="94" fill="#a5b4fc" font-size="8">서버실</text>
+              <g class="led-a">
+                <rect x="20" y="108" width="6" height="3" fill="#22d3ee" filter="url(#glowA)" />
+                <rect x="32" y="108" width="6" height="3" fill="#f472b6" filter="url(#glowA)" />
+                <rect x="44" y="108" width="6" height="3" fill="#22d3ee" filter="url(#glowA)" />
+              </g>
+              <rect x="90" y="78" width="120" height="70" fill="#1a2238" stroke="#3d4f7a" />
+              <text x="98" y="94" fill="#a5b4fc" font-size="8">정보검색</text>
+              <rect y="156" width="120" height="70" fill="#1a2238" stroke="#3d4f7a" />
+              <text x="8" y="172" fill="#a5b4fc" font-size="8">회의실</text>
+              <rect x="90" y="156" width="120" height="70" fill="#1a2238" stroke="#3d4f7a" />
+              <text x="98" y="172" fill="#a5b4fc" font-size="8">내 책상</text>
+            </g>
+            <!-- elevator -->
+            <rect x="318" y="80" width="36" height="100" fill="#0f1419" stroke="#4ade80" stroke-width="1" />
+            <g class="elev-a">
+              <rect x="322" y="140" width="28" height="22" fill="#1e293b" stroke="#6ee7b7" />
+              <rect x="328" y="148" width="8" height="10" fill="#4ade80" />
+            </g>
+            <text x="320" y="72" fill="#6ee7b7" font-size="7" font-family="monospace">▲ 3F</text>
+            <!-- boss agent pixel -->
+            <g class="agent-a" transform="translate(200, 130)">
+              <rect x="-6" y="-10" width="12" height="14" fill="#fbbf24" />
+              <rect x="-4" y="-14" width="8" height="4" fill="#1e293b" />
+            </g>
+            <g class="bubble-a" transform="translate(155, 95)">
+              <ellipse cx="0" cy="0" rx="28" ry="14" fill="#1e293b" stroke="#94a3b8" />
+              <text x="-22" y="4" fill="#e2e8f0" font-size="6">read file…</text>
+            </g>
+            <g class="explore-a" transform="translate(330, 125)">
+              <rect x="-5" y="-8" width="10" height="12" fill="#4ade80" />
+              <rect x="-6" y="-12" width="12" height="4" fill="#166534" />
+              <text x="-18" y="14" fill="#86efac" font-size="6">Explore</text>
+            </g>
+          </svg>
+        </div>
+        <p class="legend">픽셀 그리드 + 네온 LED · 말풍선 모노</p>
+      </article>
+
+      <!-- B: Cozy Isometric -->
+      <article class="card">
+        <div class="card-head">
+          <h2>B · Cozy Isometric</h2>
+          <span>2.5D · 빌딩 로비 톤</span>
+        </div>
+        <div class="stage-wrap">
+          <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="bgB" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f8fafc" />
+                <stop offset="100%" stop-color="#e2e8f0" />
+              </linearGradient>
+            </defs>
+            <rect width="400" height="300" fill="url(#bgB)" />
+            <rect x="12" y="12" width="76" height="276" rx="12" fill="#fff" stroke="#cbd5e1" />
+            <text x="22" y="36" fill="#0f766e" font-size="9" font-weight="600">3F · claude-stalker</text>
+            <text x="22" y="56" fill="#64748b" font-size="8">2F · admin-batch</text>
+            <text x="22" y="72" fill="#94a3b8" font-size="8">1F · (dark)</text>
+            <!-- iso floor plate -->
+            <path
+              d="M100 220 L320 120 L320 240 L100 300 Z"
+              fill="#f1f5f9"
+              stroke="#94a3b8"
+              stroke-width="1"
+            />
+            <path d="M100 220 L100 300 L320 240 L320 120 Z" fill="#e2e8f0" opacity="0.6" />
+            <!-- iso blocks rooms -->
+            <g transform="skewY(-12) translate(110, 80)">
+              <rect width="50" height="40" rx="4" fill="#ddd6fe" stroke="#7c3aed" opacity="0.9" />
+              <text x="6" y="24" fill="#5b21b6" font-size="7">자료실</text>
+              <rect x="58" width="50" height="40" rx="4" fill="#bfdbfe" stroke="#2563eb" />
+              <text x="64" y="24" fill="#1d4ed8" font-size="7">개발실</text>
+              <rect y="48" width="50" height="40" rx="4" fill="#fecaca" stroke="#dc2626" />
+              <text x="6" y="72" fill="#b91c1c" font-size="7">서버실</text>
+              <g class="led-b">
+                <circle cx="25" cy="58" r="3" fill="#ef4444" />
+                <circle cx="35" cy="58" r="3" fill="#f97316" />
+              </g>
+              <rect x="58" y="48" width="50" height="40" rx="4" fill="#a7f3d0" stroke="#059669" />
+              <text x="64" y="72" fill="#047857" font-size="7">검색</text>
+            </g>
+            <rect x="300" y="100" width="48" height="120" rx="8" fill="#fff" stroke="#64748b" />
+            <g class="elev-b">
+              <rect x="308" y="160" width="32" height="36" rx="4" fill="#e0f2fe" stroke="#0284c7" />
+            </g>
+            <text x="306" y="92" fill="#0369a1" font-size="8" font-weight="600">▲ 3F</text>
+            <g class="agent-b" transform="translate(210, 175)">
+              <ellipse cx="0" cy="8" rx="14" ry="5" fill="rgba(0,0,0,0.08)" />
+              <circle cx="0" cy="0" r="10" fill="#f59e0b" />
+            </g>
+            <g class="bubble-b" transform="translate(165, 130)">
+              <rect x="-32" y="-12" width="64" height="24" rx="8" fill="#fff" stroke="#cbd5e1" />
+              <text x="-26" y="4" fill="#334155" font-size="7">grep…</text>
+            </g>
+            <g class="explore-b" transform="translate(324, 150)">
+              <circle cx="0" cy="0" r="9" fill="#10b981" />
+              <text x="-16" y="18" fill="#047857" font-size="7">Explore</text>
+            </g>
+          </svg>
+        </div>
+        <p class="legend">라이트 UI · 아이소 메타포 · 부드러운 LED</p>
+      </article>
+
+      <!-- C: Soft Flat -->
+      <article class="card">
+        <div class="card-head">
+          <h2>C · Soft Flat</h2>
+          <span>파스텔 · 라운드 · 마이크로 모션</span>
+        </div>
+        <div class="stage-wrap">
+          <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="300" fill="#fff5f7" />
+            <rect x="14" y="14" width="70" height="272" rx="20" fill="#fce7f3" />
+            <text x="24" y="40" fill="#be185d" font-size="9" font-weight="600">3F ✓</text>
+            <text x="24" y="58" fill="#9d174d" font-size="8" opacity="0.7">2F</text>
+            <text x="24" y="74" fill="#9d174d" font-size="8" opacity="0.5">1F</text>
+            <g transform="translate(96, 28)">
+              <rect width="130" height="75" rx="16" fill="#e0e7ff" />
+              <text x="14" y="28" fill="#4338ca" font-size="10" font-weight="600">자료실</text>
+              <rect x="140" width="130" height="75" rx="16" fill="#d1fae5" />
+              <text x="154" y="28" fill="#047857" font-size="10" font-weight="600">개발실</text>
+              <rect y="85" width="130" height="75" rx="16" fill="#fee2e2" />
+              <text x="14" y="113" fill="#b91c1c" font-size="10" font-weight="600">서버실</text>
+              <g class="led-c">
+                <circle cx="40" cy="130" r="5" fill="#f87171" />
+                <circle cx="58" cy="130" r="5" fill="#fb923c" />
+                <circle cx="76" cy="130" r="5" fill="#f87171" />
+              </g>
+              <rect x="140" y="85" width="130" height="75" rx="16" fill="#fef3c7" />
+              <text x="154" y="113" fill="#b45309" font-size="10" font-weight="600">정보검색</text>
+              <rect y="170" width="130" height="75" rx="16" fill="#f3e8ff" />
+              <text x="14" y="198" fill="#7e22ce" font-size="10" font-weight="600">회의실</text>
+              <rect x="140" y="170" width="130" height="75" rx="16" fill="#cffafe" />
+              <text x="154" y="198" fill="#0e7490" font-size="10" font-weight="600">내 책상</text>
+            </g>
+            <rect x="310" y="90" width="44" height="110" rx="18" fill="#fdf2f8" stroke="#f9a8d4" />
+            <g class="elev-c">
+              <rect x="318" y="145" width="28" height="32" rx="12" fill="#fbcfe8" />
+            </g>
+            <text x="312" y="82" fill="#db2777" font-size="8">▲ 3F</text>
+            <g class="agent-c" transform="translate(205, 155)">
+              <ellipse cx="0" cy="14" rx="12" ry="4" fill="#fbcfe8" />
+              <rect x="-10" y="-4" width="20" height="22" rx="10" fill="#f472b6" />
+            </g>
+            <g class="bubble-c" transform="translate(160, 115)">
+              <path
+                d="M-30 -8 Q-30 -20 0 -20 Q30 -20 30 -8 L30 8 Q30 18 0 18 Q-30 18 -30 8 Z"
+                fill="#fff"
+                stroke="#f9a8d4"
+              />
+              <text x="-20" y="4" fill="#831843" font-size="7">thinking…</text>
+            </g>
+            <g class="explore-c" transform="translate(328, 135)">
+              <rect x="-9" y="-6" width="18" height="20" rx="9" fill="#86efac" />
+              <text x="-20" y="22" fill="#15803d" font-size="7">Explore 🧢</text>
+            </g>
+          </svg>
+        </div>
+        <p class="legend">파스텔 방 카드 · 둥근 캐릭터 · 12초 루프</p>
+      </article>
+    </div>
+  </body>
+</html>
