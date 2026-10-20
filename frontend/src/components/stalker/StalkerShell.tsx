@@ -9,7 +9,13 @@ import { StalkerRightRail } from "@/components/stalker/StalkerRightRail";
 import { StalkerMapHeader } from "@/components/stalker/StalkerMapHeader";
 import { StalkerLangSync } from "@/components/stalker/StalkerLangSync";
 import { useTranslation } from "@/hooks/useTranslation";
-import { buildFloors, projectKey } from "@/utils/stalkerFormat";
+import { buildFloors, sessionTitle } from "@/utils/stalkerFormat";
+import { useNavigationStore } from "@/stores/navigationStore";
+import CommandBar, {
+  type CommandEntry,
+} from "@/components/attention/CommandBar";
+import AttentionToasts from "@/components/attention/AttentionToasts";
+import AgentPopup from "@/components/attention/AgentPopup";
 
 const StalkerGameCanvas = dynamic(
   () =>
@@ -51,10 +57,44 @@ export function StalkerShell({
 }: StalkerShellProps): ReactNode {
   const { t } = useTranslation();
   const now = useNow();
-  const floors = useMemo(() => buildFloors(t, sessions), [t, sessions]);
+  const buildingConfig = useNavigationStore((s) => s.buildingConfig);
+  const floors = useMemo(
+    () => buildFloors(t, sessions, buildingConfig),
+    [t, sessions, buildingConfig],
+  );
   const session = sessions.find((s) => s.id === sessionId) ?? null;
-  const activeFloorKey = session ? projectKey(session) : null;
-  const activeFloor = floors.find((f) => f.key === activeFloorKey) ?? null;
+  const activeFloor =
+    floors.find((f) => f.sessions.some((s) => s.id === sessionId)) ?? null;
+  const hasConfiguredFloors = (buildingConfig?.floors.length ?? 0) > 0;
+
+  // ⌘K: jump to any floor, any session on this floor, or open settings.
+  const commands = useMemo<CommandEntry[]>(
+    () => [
+      ...floors
+        .filter((f) => f.sessions.length > 0 && f.key !== activeFloor?.key)
+        .map((f) => ({
+          id: `floor-${f.key}`,
+          label: t("stalker.cmd.goFloor", { floor: f.floor, name: f.name }),
+          icon: f.icon ?? "🏢",
+          action: () => void onSessionSelect(f.sessions[0].id),
+        })),
+      ...(activeFloor?.sessions ?? [])
+        .filter((s) => s.id !== sessionId)
+        .map((s) => ({
+          id: `session-${s.id}`,
+          label: t("stalker.cmd.openSession", { title: sessionTitle(t, s) }),
+          icon: "📌",
+          action: () => void onSessionSelect(s.id),
+        })),
+      {
+        id: "open-settings",
+        label: t("stalker.cmd.openSettings"),
+        icon: "⚙️",
+        action: onOpenSettings,
+      },
+    ],
+    [floors, activeFloor, sessionId, onSessionSelect, onOpenSettings, t],
+  );
 
   return (
     <div
@@ -64,7 +104,10 @@ export function StalkerShell({
       <StalkerLangSync />
       <StalkerLeftRail
         floors={floors}
-        activeFloorKey={activeFloorKey}
+        activeFloorKey={activeFloor?.key ?? null}
+        buildingName={
+          hasConfiguredFloors ? (buildingConfig?.buildingName ?? null) : null
+        }
         sessionsLoading={sessionsLoading}
         sessionId={sessionId}
         now={now}
@@ -76,10 +119,11 @@ export function StalkerShell({
         <StalkerMapHeader floor={activeFloor} session={session} />
       </main>
 
-      <StalkerRightRail
-        session={session}
-        onOpenSettings={onOpenSettings}
-      />
+      <CommandBar extraCommands={commands} />
+      <AttentionToasts />
+      <AgentPopup />
+
+      <StalkerRightRail session={session} onOpenSettings={onOpenSettings} />
     </div>
   );
 }

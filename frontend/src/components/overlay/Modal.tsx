@@ -11,7 +11,12 @@ interface ModalProps {
   children: ReactNode;
   footer?: ReactNode;
   dismissible?: boolean;
+  /** Optional element shown before the title (badge, icon). */
+  titleAdornment?: ReactNode;
+  size?: "md" | "lg";
 }
+
+const SIZE_CLASS = { md: "max-w-md", lg: "max-w-2xl" } as const;
 
 export default function Modal({
   isOpen,
@@ -20,6 +25,8 @@ export default function Modal({
   children,
   footer,
   dismissible = true,
+  titleAdornment,
+  size = "md",
 }: ModalProps) {
   const { t } = useTranslation();
   const titleId = useId();
@@ -39,41 +46,42 @@ export default function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/25 p-4 backdrop-blur-[2px] animate-in fade-in duration-200"
       onClick={dismissible ? onClose : undefined}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+        className={`flex max-h-[80vh] w-full ${SIZE_CLASS[size]} flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white text-slate-700 shadow-2xl shadow-slate-900/10 animate-in zoom-in-95 duration-200`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/50 flex-shrink-0">
+        <div className="flex flex-shrink-0 items-center gap-2 border-b border-slate-100 px-6 py-4">
+          {titleAdornment}
           <h2
             id={titleId}
-            className="text-lg font-bold text-white tracking-tight"
+            className="mr-auto text-base font-bold tracking-tight text-slate-900"
           >
             {title}
           </h2>
           <button
             onClick={onClose}
             aria-label={t("modal.close")}
-            className="p-1 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
+            className="rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="px-6 py-6 text-slate-300 text-sm leading-relaxed overflow-y-auto flex-1 min-h-0">
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5 text-sm leading-relaxed text-slate-600">
           {children}
         </div>
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-800 bg-slate-900/50 flex-shrink-0">
+          <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-slate-100 bg-slate-50/60 px-6 py-3">
             {footer}
           </div>
         )}

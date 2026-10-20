@@ -13,7 +13,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useWebSocketEvents } from "@/hooks/useWebSocketEvents";
 import { useSessions } from "@/hooks/useSessions";
 import { useSessionSwitch } from "@/hooks/useSessionSwitch";
@@ -178,6 +178,22 @@ export default function V2TestPage(): React.ReactNode {
   // ------------------------------------------------------------------
   useFloorConfig();
 
+  // Project folder names from sessions — quick-add floors in Settings › Building.
+  const detectedProjects = useMemo(
+    () => [
+      ...new Set(
+        sessions
+          .map(
+            (s) =>
+              s.projectRoot?.split(/[/\\]/).filter(Boolean).pop() ??
+              s.projectName,
+          )
+          .filter((name): name is string => !!name),
+      ),
+    ],
+    [sessions],
+  );
+
   // Watch for edit-building requests from BuildingView. Subscribe to the
   // store so the modal-opening setState runs in an event callback (the store
   // notification) rather than in the effect body.
@@ -293,13 +309,13 @@ export default function V2TestPage(): React.ReactNode {
           <>
             <button
               onClick={() => setIsClearModalOpen(false)}
-              className="px-4 py-2 text-slate-400 hover:text-white text-sm font-bold transition-colors"
+              className="rounded-xl px-4 py-1.5 text-xs font-bold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
             >
               {t("modal.cancel")}
             </button>
             <button
               onClick={handleConfirmClearDB}
-              className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold rounded-lg transition-colors shadow-lg shadow-rose-900/20"
+              className="rounded-xl bg-rose-500 px-4 py-1.5 text-xs font-bold text-white transition-colors hover:bg-rose-600"
             >
               {t("modal.wipeAllData")}
             </button>
@@ -317,14 +333,14 @@ export default function V2TestPage(): React.ReactNode {
           <>
             <button
               onClick={handleStartTour}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 text-sm font-bold rounded-lg transition-colors"
+              className="flex items-center gap-2 rounded-xl border border-claude-200 bg-claude-50 px-4 py-1.5 text-xs font-bold text-claude-700 transition-colors hover:bg-claude-100"
             >
               <Map size={16} />
               {t("help.tour")}
             </button>
             <button
               onClick={() => setIsHelpModalOpen(false)}
-              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold rounded-lg transition-colors"
+              className="rounded-xl bg-claude-500 px-4 py-1.5 text-xs font-bold text-white transition-colors hover:bg-claude-600"
             >
               {t("modal.close")}
             </button>
@@ -333,25 +349,25 @@ export default function V2TestPage(): React.ReactNode {
       >
         <div className="space-y-3 font-mono text-sm">
           <div className="flex justify-between items-center py-2 border-b border-slate-700">
-            <kbd className="px-2 py-1 bg-slate-800 rounded text-white font-bold">
+            <kbd className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 font-bold text-slate-700">
               D
             </kbd>
             <span className="text-slate-300">{t("modal.toggleDebug")}</span>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-slate-700">
-            <kbd className="px-2 py-1 bg-slate-800 rounded text-white font-bold">
+            <kbd className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 font-bold text-slate-700">
               P
             </kbd>
             <span className="text-slate-300">{t("modal.showAgentPaths")}</span>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-slate-700">
-            <kbd className="px-2 py-1 bg-slate-800 rounded text-white font-bold">
+            <kbd className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 font-bold text-slate-700">
               Q
             </kbd>
             <span className="text-slate-300">{t("modal.showQueueSlots")}</span>
           </div>
           <div className="flex justify-between items-center py-2">
-            <kbd className="px-2 py-1 bg-slate-800 rounded text-white font-bold">
+            <kbd className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 font-bold text-slate-700">
               L
             </kbd>
             <span className="text-slate-300">{t("modal.showPhaseLabels")}</span>
@@ -363,6 +379,7 @@ export default function V2TestPage(): React.ReactNode {
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
         initialTab={settingsInitialTab}
+        detectedProjects={detectedProjects}
       />
 
       <Modal
@@ -373,13 +390,13 @@ export default function V2TestPage(): React.ReactNode {
           <>
             <button
               onClick={() => setSessionPendingDelete(null)}
-              className="px-4 py-2 text-slate-400 hover:text-white text-sm font-bold transition-colors"
+              className="rounded-xl px-4 py-1.5 text-xs font-bold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
             >
               {t("modal.cancel")}
             </button>
             <button
               onClick={handleConfirmDeleteSession}
-              className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold rounded-lg transition-colors shadow-lg shadow-rose-900/20"
+              className="rounded-xl bg-rose-500 px-4 py-1.5 text-xs font-bold text-white transition-colors hover:bg-rose-600"
             >
               {t("modal.delete")}
             </button>
@@ -388,13 +405,13 @@ export default function V2TestPage(): React.ReactNode {
       >
         <p>
           {t("modal.deleteSessionConfirm")}{" "}
-          <span className="font-mono text-purple-400">
+          <span className="font-mono text-claude-600">
             {sessionPendingDelete?.projectName ||
               sessionPendingDelete?.id.slice(0, 8)}
           </span>
           ?
         </p>
-        <p className="text-slate-400 text-sm mt-2">
+        <p className="mt-2 text-sm text-slate-500">
           {t("modal.deleteSessionWarning")}{" "}
           {sessionPendingDelete?.eventCount ?? 0} {t("modal.events")}.{" "}
           {t("modal.cannotBeUndone")}

@@ -22,7 +22,10 @@ export function StalkerInfoTabs(): ReactNode {
 
   return (
     <section className="flex min-h-0 flex-1 flex-col rounded-2xl border border-slate-200/70 bg-white p-3 shadow-sm">
-      <div role="tablist" className="mb-1.5 flex gap-0.5 rounded-xl bg-slate-100 p-0.5">
+      <div
+        role="tablist"
+        className="mb-1.5 flex gap-0.5 rounded-xl bg-slate-100 p-0.5"
+      >
         {TABS.map(({ id, label }) => (
           <button
             key={id}
@@ -31,7 +34,9 @@ export function StalkerInfoTabs(): ReactNode {
             aria-selected={tab === id}
             onClick={() => setTab(id)}
             className={`flex-1 rounded-[10px] py-1 text-xs font-semibold transition-colors ${
-              tab === id ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"
+              tab === id
+                ? "bg-white text-slate-800 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
             }`}
           >
             {t(label)}

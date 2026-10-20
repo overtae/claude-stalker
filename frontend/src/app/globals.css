@@ -9,6 +9,16 @@
 }
 
 @theme inline {
+  /* Claude brand orange — the Stalker UI accent (500 = #d97757). */
+  --color-claude-50: #fdf4f0;
+  --color-claude-100: #fae5db;
+  --color-claude-200: #f4cab7;
+  --color-claude-300: #eca98b;
+  --color-claude-400: #e38c69;
+  --color-claude-500: #d97757;
+  --color-claude-600: #c4603f;
+  --color-claude-700: #a14b31;
+  --color-claude-800: #7f3c29;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -112,23 +122,27 @@ body {
     background: transparent;
   }
 
+  /* Soft gray thumb that warms to Claude orange on hover */
   ::-webkit-scrollbar-thumb {
-    background: #1e293b; /* slate-800 */
+    background: #cbd5e1; /* slate-300 */
     border-radius: 10px;
     border: 2px solid transparent;
     background-clip: padding-box;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #f97316; /* orange-500 */
+    background: #d97757; /* claude-500 */
     border: 2px solid transparent;
     background-clip: padding-box;
   }
 
-  /* Firefox */
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: #1e293b transparent;
+  /* Firefox only — in Chrome 121+ the standard properties would override
+     the ::-webkit-scrollbar rules above and drop the orange hover. */
+  @supports (-moz-appearance: none) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+    }
   }
 }
 

@@ -1,9 +1,24 @@
 [project]
-name = "claude-office-visualizer"
+name = "claude-stalker"
 version = "0.25.0"
-description = "Real-time pixel art visualization of Claude Code operations"
-readme = "README.md"
+description = "Cozy isometric office that shows what Claude Code is doing, live"
+readme = "README.pypi.md"
 requires-python = ">=3.13"
+license = "MIT"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+authors = [{ name = "overtae" }]
+keywords = ["claude-code", "visualization", "isometric", "office", "agents", "hooks"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Framework :: FastAPI",
+    "Intended Audience :: Developers",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development",
+]
 dependencies = [
     "fastapi>=0.143.2",
     "uvicorn[standard]>=0.54.0",
@@ -65,9 +80,22 @@ testpaths = [
 ]
 timeout = 5
 
+[project.urls]
+Homepage = "https://github.com/overtae/claude-stalker"
+Source = "https://github.com/overtae/claude-stalker"
+Issues = "https://github.com/overtae/claude-stalker/issues"
+
+[project.scripts]
+claude-stalker = "app.launcher.cli:main"
+
 [tool.hatch.build.targets.wheel]
 packages = [
     "app",
+]
+# Built by scripts/build-dist.sh and git-ignored, so list them explicitly.
+artifacts = [
+    "app/static/**",
+    "app/_bundled/**",
 ]
 
 [dependency-groups]

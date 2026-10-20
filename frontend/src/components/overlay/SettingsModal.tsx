@@ -1,5 +1,6 @@
 "use client";
 
+import { STALKER_HIDE_LEGACY_OFFICE } from "@/constants/stalkerView";
 import { useState, useCallback, ReactNode } from "react";
 import Modal from "./Modal";
 import {
@@ -21,6 +22,8 @@ interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialTab?: "general" | "building";
+  /** Project folder names seen in sessions (building tab quick-add). */
+  detectedProjects?: string[];
 }
 
 // ============================================================================
@@ -49,12 +52,12 @@ function SettingsToggle({
           onChange();
         }
       }}
-      className="flex items-center justify-between p-2.5 rounded-lg bg-slate-800 border border-slate-700 cursor-pointer hover:border-slate-600 transition-colors"
+      className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white p-2.5 transition-colors hover:border-slate-300 hover:bg-slate-50"
     >
-      <span className="text-slate-300 text-sm">{label}</span>
+      <span className="text-sm text-slate-700">{label}</span>
       <div
         className={`w-9 h-5 rounded-full relative transition-colors ${
-          checked ? "bg-purple-500" : "bg-slate-600"
+          checked ? "bg-claude-500" : "bg-slate-300"
         }`}
       >
         <div
@@ -75,6 +78,7 @@ export default function SettingsModal({
   isOpen,
   onClose,
   initialTab = "general",
+  detectedProjects,
 }: SettingsModalProps): ReactNode {
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
   const [buildingDirty, setBuildingDirty] = useState(false);
@@ -172,23 +176,23 @@ export default function SettingsModal({
       footer={
         <button
           onClick={onClose}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold rounded-lg transition-colors"
+          className="rounded-xl bg-claude-500 px-4 py-1.5 text-xs font-bold text-white transition-colors hover:bg-claude-600"
         >
           {t("modal.close")}
         </button>
       }
     >
       {/* Tab bar */}
-      <div className="flex gap-1 mb-6 p-1 bg-slate-800/50 rounded-lg border border-slate-700">
+      <div className="mb-6 flex gap-0.5 rounded-xl bg-slate-100 p-0.5">
         {(["general", "building"] as const).map((tab) => (
           <button
             key={tab}
             type="button"
             onClick={() => handleTabSwitch(tab)}
-            className={`flex-1 px-4 py-2 rounded-md text-sm font-bold transition-colors ${
+            className={`flex-1 rounded-[10px] px-4 py-1.5 text-sm font-semibold transition-colors ${
               activeTab === tab
-                ? "bg-purple-500/20 border border-purple-500 text-purple-300"
-                : "bg-transparent border border-transparent text-slate-400 hover:text-slate-300 hover:bg-slate-800"
+                ? "bg-white text-slate-800 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
             }`}
           >
             {t(`settings.tabs.${tab}`)}
@@ -204,7 +208,7 @@ export default function SettingsModal({
         <div className="space-y-6">
           {/* Language */}
           <div>
-            <label className="block text-slate-400 text-xs font-bold uppercase tracking-wider mb-3">
+            <label className="mb-2 block text-xs font-semibold text-slate-500">
               {t("settings.language")}
             </label>
             <div
@@ -239,10 +243,10 @@ export default function SettingsModal({
                           (parent.children[next] as HTMLElement)?.focus();
                       }
                     }}
-                    className={`flex-1 px-4 py-3 rounded-lg border text-sm font-bold transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 outline-none ${
+                    className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-claude-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
                       language === locale
-                        ? "bg-purple-500/20 border-purple-500 text-purple-300"
-                        : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600"
+                        ? "border-claude-300 bg-claude-50 text-claude-700"
+                        : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
                     }`}
                   >
                     {label}
@@ -252,117 +256,128 @@ export default function SettingsModal({
             </div>
           </div>
 
-          {/* Clock Type */}
-          <div>
-            <label className="block text-slate-400 text-xs font-bold uppercase tracking-wider mb-3">
-              {t("settings.clockType")}
-            </label>
-            <div
-              className="flex gap-3"
-              role="radiogroup"
-              aria-label={t("settings.clockType")}
-            >
-              {(["analog", "digital"] as const).map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  role="radio"
-                  aria-checked={clockType === type}
-                  tabIndex={clockType === type ? 0 : -1}
-                  onClick={() => handleClockTypeChange(type)}
-                  onKeyDown={(e) => {
-                    const values: ClockType[] = ["analog", "digital"];
-                    const parent = e.currentTarget.parentElement;
-                    if (!parent) return;
-                    const buttons = Array.from(
-                      parent.children,
-                    ) as HTMLElement[];
-                    const idx = buttons.indexOf(e.currentTarget);
-                    let nextIdx: number | null = null;
-                    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-                      e.preventDefault();
-                      nextIdx = (idx + 1) % values.length;
-                    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-                      e.preventDefault();
-                      nextIdx = (idx - 1 + values.length) % values.length;
-                    }
-                    if (nextIdx !== null) {
-                      handleClockTypeChange(values[nextIdx]);
-                      buttons[nextIdx].focus();
-                    }
-                  }}
-                  className={`flex-1 px-4 py-3 rounded-lg border text-sm font-bold transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 outline-none ${
-                    clockType === type
-                      ? "bg-purple-500/20 border-purple-500 text-purple-300"
-                      : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600"
-                  }`}
+          {/* Clock settings drive the legacy pixel office only */}
+          {!STALKER_HIDE_LEGACY_OFFICE && (
+            <>
+              {/* Clock Type */}
+              <div>
+                <label className="mb-2 block text-xs font-semibold text-slate-500">
+                  {t("settings.clockType")}
+                </label>
+                <div
+                  className="flex gap-3"
+                  role="radiogroup"
+                  aria-label={t("settings.clockType")}
                 >
-                  {type === "analog"
-                    ? t("settings.analog")
-                    : t("settings.digital")}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Time Format - only visible when digital */}
-          {clockType === "digital" && (
-            <div>
-              <label className="block text-slate-400 text-xs font-bold uppercase tracking-wider mb-3">
-                {t("settings.timeFormat")}
-              </label>
-              <div
-                className="flex gap-3"
-                role="radiogroup"
-                aria-label={t("settings.timeFormat")}
-              >
-                {(["12h", "24h"] as const).map((fmt) => (
-                  <button
-                    key={fmt}
-                    type="button"
-                    role="radio"
-                    aria-checked={clockFormat === fmt}
-                    tabIndex={clockFormat === fmt ? 0 : -1}
-                    onClick={() => handleClockFormatChange(fmt)}
-                    onKeyDown={(e) => {
-                      const values: ClockFormat[] = ["12h", "24h"];
-                      const parent = e.currentTarget.parentElement;
-                      if (!parent) return;
-                      const buttons = Array.from(
-                        parent.children,
-                      ) as HTMLElement[];
-                      const idx = buttons.indexOf(e.currentTarget);
-                      let nextIdx: number | null = null;
-                      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-                        e.preventDefault();
-                        nextIdx = (idx + 1) % values.length;
-                      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-                        e.preventDefault();
-                        nextIdx = (idx - 1 + values.length) % values.length;
-                      }
-                      if (nextIdx !== null) {
-                        handleClockFormatChange(values[nextIdx]);
-                        buttons[nextIdx].focus();
-                      }
-                    }}
-                    className={`flex-1 px-4 py-3 rounded-lg border text-sm font-bold transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 outline-none ${
-                      clockFormat === fmt
-                        ? "bg-purple-500/20 border-purple-500 text-purple-300"
-                        : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600"
-                    }`}
-                  >
-                    {fmt === "12h"
-                      ? t("settings.12hour")
-                      : t("settings.24hour")}
-                  </button>
-                ))}
+                  {(["analog", "digital"] as const).map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      role="radio"
+                      aria-checked={clockType === type}
+                      tabIndex={clockType === type ? 0 : -1}
+                      onClick={() => handleClockTypeChange(type)}
+                      onKeyDown={(e) => {
+                        const values: ClockType[] = ["analog", "digital"];
+                        const parent = e.currentTarget.parentElement;
+                        if (!parent) return;
+                        const buttons = Array.from(
+                          parent.children,
+                        ) as HTMLElement[];
+                        const idx = buttons.indexOf(e.currentTarget);
+                        let nextIdx: number | null = null;
+                        if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+                          e.preventDefault();
+                          nextIdx = (idx + 1) % values.length;
+                        } else if (
+                          e.key === "ArrowLeft" ||
+                          e.key === "ArrowUp"
+                        ) {
+                          e.preventDefault();
+                          nextIdx = (idx - 1 + values.length) % values.length;
+                        }
+                        if (nextIdx !== null) {
+                          handleClockTypeChange(values[nextIdx]);
+                          buttons[nextIdx].focus();
+                        }
+                      }}
+                      className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-claude-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+                        clockType === type
+                          ? "border-claude-300 bg-claude-50 text-claude-700"
+                          : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+                      }`}
+                    >
+                      {type === "analog"
+                        ? t("settings.analog")
+                        : t("settings.digital")}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+
+              {/* Time Format - only visible when digital */}
+              {clockType === "digital" && (
+                <div>
+                  <label className="mb-2 block text-xs font-semibold text-slate-500">
+                    {t("settings.timeFormat")}
+                  </label>
+                  <div
+                    className="flex gap-3"
+                    role="radiogroup"
+                    aria-label={t("settings.timeFormat")}
+                  >
+                    {(["12h", "24h"] as const).map((fmt) => (
+                      <button
+                        key={fmt}
+                        type="button"
+                        role="radio"
+                        aria-checked={clockFormat === fmt}
+                        tabIndex={clockFormat === fmt ? 0 : -1}
+                        onClick={() => handleClockFormatChange(fmt)}
+                        onKeyDown={(e) => {
+                          const values: ClockFormat[] = ["12h", "24h"];
+                          const parent = e.currentTarget.parentElement;
+                          if (!parent) return;
+                          const buttons = Array.from(
+                            parent.children,
+                          ) as HTMLElement[];
+                          const idx = buttons.indexOf(e.currentTarget);
+                          let nextIdx: number | null = null;
+                          if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+                            e.preventDefault();
+                            nextIdx = (idx + 1) % values.length;
+                          } else if (
+                            e.key === "ArrowLeft" ||
+                            e.key === "ArrowUp"
+                          ) {
+                            e.preventDefault();
+                            nextIdx = (idx - 1 + values.length) % values.length;
+                          }
+                          if (nextIdx !== null) {
+                            handleClockFormatChange(values[nextIdx]);
+                            buttons[nextIdx].focus();
+                          }
+                        }}
+                        className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-claude-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+                          clockFormat === fmt
+                            ? "border-claude-300 bg-claude-50 text-claude-700"
+                            : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+                        }`}
+                      >
+                        {fmt === "12h"
+                          ? t("settings.12hour")
+                          : t("settings.24hour")}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Session Settings */}
-          <div className="pt-4 border-t border-slate-800">
-            <label className="block text-slate-400 text-xs font-bold uppercase tracking-wider mb-3">
+          <div className="border-t border-slate-100 pt-4">
+            <label className="mb-2 block text-xs font-semibold text-slate-500">
               {t("settings.sessionBehavior")}
             </label>
             <div
@@ -377,10 +392,10 @@ export default function SettingsModal({
                   handleAutoFollowToggle();
                 }
               }}
-              className="flex items-center justify-between p-3 rounded-lg bg-slate-800 border border-slate-700 cursor-pointer hover:border-slate-600 transition-colors"
+              className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white p-3 transition-colors hover:border-slate-300 hover:bg-slate-50"
             >
               <div>
-                <p className="text-slate-300 text-sm font-medium">
+                <p className="text-sm font-medium text-slate-700">
                   {t("settings.autoFollow")}
                 </p>
                 <p className="text-slate-500 text-xs mt-0.5">
@@ -389,7 +404,7 @@ export default function SettingsModal({
               </div>
               <div
                 className={`w-11 h-6 rounded-full relative transition-colors ${
-                  autoFollowNewSessions ? "bg-purple-500" : "bg-slate-600"
+                  autoFollowNewSessions ? "bg-claude-500" : "bg-slate-300"
                 }`}
               >
                 <div
@@ -402,8 +417,8 @@ export default function SettingsModal({
           </div>
 
           {/* Attention Settings */}
-          <div className="pt-4 border-t border-slate-800">
-            <label className="block text-slate-400 text-xs font-bold uppercase tracking-wider mb-3">
+          <div className="border-t border-slate-100 pt-4">
+            <label className="mb-2 block text-xs font-semibold text-slate-500">
               {t("settings.toastFilters")}
             </label>
             <div className="space-y-2">
@@ -444,13 +459,17 @@ export default function SettingsModal({
             </div>
           </div>
 
-          {/* Tip */}
-          <div className="pt-4 border-t border-slate-800">
-            <p className="text-slate-500 text-xs">{t("settings.clockTip")}</p>
-          </div>
+          {!STALKER_HIDE_LEGACY_OFFICE && (
+            <div className="border-t border-slate-100 pt-4">
+              <p className="text-slate-500 text-xs">{t("settings.clockTip")}</p>
+            </div>
+          )}
         </div>
       ) : (
-        <BuildingTab onDirtyChange={handleDirtyChange} />
+        <BuildingTab
+          onDirtyChange={handleDirtyChange}
+          detectedProjects={detectedProjects}
+        />
       )}
     </Modal>
   );

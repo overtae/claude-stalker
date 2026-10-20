@@ -75,7 +75,8 @@ const ko: Record<TranslationKey, string> = {
   "settings.24hour": "24시간제",
   "settings.sessionBehavior": "세션 동작",
   "settings.autoFollow": "새 세션 자동으로 따라가기",
-  "settings.autoFollowDesc": "같은 프로젝트에 새 세션이 생기면 자동으로 전환합니다",
+  "settings.autoFollowDesc":
+    "같은 프로젝트에 새 세션이 생기면 자동으로 전환합니다",
   "settings.clockTip": "팁: 사무실 시계를 클릭하면 표시 방식이 바뀝니다.",
   "settings.language": "언어",
   "settings.tabs.general": "일반",
@@ -96,10 +97,12 @@ const ko: Record<TranslationKey, string> = {
   "settings.building.deleteFloor": "삭제",
   "settings.building.noFloors": "설정된 층이 없습니다",
   "settings.building.enableHint":
-    "층을 추가하고 프로젝트 폴더를 연결하면 건물 보기가 켜집니다",
-  "settings.building.unsavedWarning": "저장하지 않은 건물 변경 사항이 있어요. 버릴까요?",
+    "층 이름·번호·아이콘·색을 정하고 프로젝트 폴더를 연결하면 왼쪽 층별 안내에 그대로 반영돼요. 연결 안 된 프로젝트는 그 위층에 자동으로 배치돼요.",
+  "settings.building.unsavedWarning":
+    "저장하지 않은 건물 변경 사항이 있어요. 버릴까요?",
   "settings.building.saveFailed": "저장 실패: {status} {statusText}",
-  "settings.building.saveUnreachable": "백엔드에 연결할 수 없어요 — 서버가 켜져 있나요?",
+  "settings.building.saveUnreachable":
+    "백엔드에 연결할 수 없어요 — 서버가 켜져 있나요?",
 
   // Sessions
   "sessions.title": "세션",
@@ -168,7 +171,8 @@ const ko: Record<TranslationKey, string> = {
   "conversation.showToolCalls": "도구 호출 보기",
   "conversation.expandConversation": "대화 펼치기",
   "conversation.close": "닫기",
-  "conversation.noConversation": "아직 대화가 없어요. Claude Code 세션을 시작해 보세요.",
+  "conversation.noConversation":
+    "아직 대화가 없어요. Claude Code 세션을 시작해 보세요.",
 
   // Event Detail Modal
   "eventDetail.summary": "요약",
@@ -182,6 +186,31 @@ const ko: Record<TranslationKey, string> = {
   "eventDetail.errorType": "오류 종류",
   "eventDetail.toolInput": "도구 입력",
   "eventDetail.noDetail": "이 이벤트에는 추가 정보가 없습니다.",
+  "eventType.session_start": "세션 시작",
+  "eventType.session_end": "세션 종료",
+  "eventType.pre_tool_use": "도구 시작",
+  "eventType.post_tool_use": "도구 완료",
+  "eventType.user_prompt_submit": "내 요청",
+  "eventType.permission_request": "승인 요청",
+  "eventType.notification": "알림",
+  "eventType.subagent_start": "서브에이전트 출근",
+  "eventType.subagent_info": "서브에이전트 정보",
+  "eventType.subagent_stop": "서브에이전트 퇴근",
+  "eventType.agent_update": "에이전트 갱신",
+  "eventType.stop": "응답 완료",
+  "eventType.cleanup": "정리",
+  "eventType.context_compaction": "컨텍스트 압축",
+  "eventType.reporting": "보고",
+  "eventType.walking_to_desk": "자리로 이동",
+  "eventType.waiting": "대기",
+  "eventType.leaving": "퇴근",
+  "eventType.error": "오류",
+  "eventType.background_task_notification": "백그라운드 작업",
+  "eventType.task_created": "작업 생성",
+  "eventType.task_completed": "작업 완료",
+  "eventType.teammate_idle": "팀원 대기",
+  "eventDetail.time": "시각",
+  "eventDetail.actor": "누가",
 
   // Loading Screen
   "loading.office": "사무실 불러오는 중…",
@@ -212,7 +241,8 @@ const ko: Record<TranslationKey, string> = {
   "status.simulationStarted": "시뮬레이션을 시작했어요!",
   "status.failedSimulation": "시뮬레이션을 시작하지 못했어요.",
   "status.storeReset": "상태를 초기화했어요.",
-  "status.sessionDeletedSwitched": "세션을 삭제하고 {sessionName}(으)로 전환했어요",
+  "status.sessionDeletedSwitched":
+    "세션을 삭제하고 {sessionName}(으)로 전환했어요",
   "status.sessionDeletedNoOthers": "세션을 삭제했어요. 남은 세션이 없어요.",
   "status.connectedTo": "{sessionName}에 연결됨",
   "status.autoFollowed": "새 세션을 따라갑니다: {sessionName}",
@@ -222,17 +252,20 @@ const ko: Record<TranslationKey, string> = {
 
   // Tour
   "tour.steps.welcome.title": "환영해요",
-  "tour.steps.welcome.description": "여기가 커맨드 센터예요. 층을 눌러 둘러보세요.",
+  "tour.steps.welcome.description":
+    "여기가 커맨드 센터예요. 층을 눌러 둘러보세요.",
   "tour.steps.singleWelcome.title": "Claude Stalker에 오신 걸 환영해요",
   "tour.steps.singleWelcome.description":
     "이 사무실은 Claude Code 세션을 실시간으로 보여줘요. 한번 둘러볼까요?",
   "tour.steps.simulate.title": "시뮬레이션 시작",
-  "tour.steps.simulate.description": "시뮬레이션을 누르면 사무실이 움직이기 시작해요.",
+  "tour.steps.simulate.description":
+    "시뮬레이션을 누르면 사무실이 움직이기 시작해요.",
   "tour.steps.agentsArrive.title": "에이전트 출근",
   "tour.steps.agentsArrive.description":
     "에이전트는 엘리베이터로 들어와 자리에 앉아 일을 시작해요.",
   "tour.steps.inspectAgent.title": "에이전트 살펴보기",
-  "tour.steps.inspectAgent.description": "캐릭터를 클릭하면 자세히 볼 수 있어요.",
+  "tour.steps.inspectAgent.description":
+    "캐릭터를 클릭하면 자세히 볼 수 있어요.",
   "tour.steps.focusPopup.title": "상세 팝업",
   "tour.steps.focusPopup.description":
     "여기서 메시지를 복사하거나 터미널로 바로 갈 수 있어요. Claude가 일하는 동안 사무실이 실시간으로 바뀌어요.",
@@ -253,7 +286,7 @@ const ko: Record<TranslationKey, string> = {
   "attention.toast.backgroundTask": "{agentName}: {taskDescription}",
   "attention.commandBar.placeholder": "명령을 입력하세요…",
   "attention.commandBar.focusAgent": "에이전트 보기: {name}",
-  "attention.commandBar.focusBoss": "보스 터미널로 이동",
+  "attention.commandBar.focusBoss": "Claude 살펴보기",
   "attention.commandBar.showAttention": "확인 필요 목록 보기",
   "attention.commandBar.dismissAll": "알림 모두 닫기",
   "attention.commandBar.toggleDebug": "디버그 보기 전환",
@@ -291,16 +324,13 @@ const ko: Record<TranslationKey, string> = {
   "stalker.officePeople": "사무실 사람들",
   "stalker.activityLog": "활동 로그",
   "stalker.legend": "어디서 무엇을 하나",
-  "stalker.loadingAssets": "사무실 꾸미는 중…",
   "stalker.loading": "불러오는 중…",
   "stalker.waiting": "대기 중",
   "stalker.nowIn": "지금: {zone}",
-  "stalker.connectHint": "연결 안 됨 · 시뮬레이션을 눌러보세요",
-  "stalker.assetError": "가구 에셋을 불러오지 못했어요. buggy/ 링크를 확인하세요.",
-  "stalker.assetPartial": "에셋 {count}개 누락 (일부만 표시)",
   "stalker.sessions": "세션",
   "stalker.sessionsLoading": "세션 불러오는 중…",
-  "stalker.sessionsEmpty": "세션이 없어요 · Claude Code를 실행하거나 시뮬레이션을 눌러보세요",
+  "stalker.sessionsEmpty":
+    "아직 세션이 없어요 · Claude Code를 실행하면 여기에 층이 생겨요",
   "stalker.claude": "Claude",
   "stalker.floorActive": "{floor}층",
 
@@ -374,6 +404,12 @@ const ko: Record<TranslationKey, string> = {
   "stalker.wb.calls": "{count}회",
   "stalker.wb.stillWorking": "근무 중",
   "stalker.coffeeCups": "{count}잔",
+  "stalker.cmd.goFloor": "{floor}층 · {name}(으)로 이동",
+  "stalker.cmd.openSession": "세션 열기: {title}",
+  "stalker.cmd.openSettings": "설정 열기",
+  "stalker.floorEmpty": "아직 세션 없음",
+  "settings.building.detected": "세션에서 찾은 프로젝트",
+  "settings.building.detectedHint": "누르면 그 프로젝트의 층이 추가돼요",
 
   // Relative time
   "time.justNow": "방금",

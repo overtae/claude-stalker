@@ -9,14 +9,14 @@ import type { BubbleContent } from "@/types";
 import { CLAUDE_COLOR, agentColor, toCssColor } from "@/utils/stalkerFormat";
 
 /** Three tones only: busy (accent), needs-you (amber), everything else (neutral). */
-const BUSY = "bg-teal-50 text-teal-700";
+const BUSY = "bg-claude-50 text-claude-700";
 const PILL_STYLES: Record<string, string> = {
   thinking: BUSY,
   working: BUSY,
   delegating: BUSY,
   reviewing: BUSY,
   receiving: BUSY,
-  waiting_permission: "bg-amber-50 text-amber-700",
+  waiting_permission: "bg-rose-50 text-rose-600",
 };
 const DEFAULT_PILL = "bg-slate-100 text-slate-600";
 
@@ -52,7 +52,9 @@ function PersonRow({
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="truncate text-sm font-bold text-slate-800">{name}</span>
+          <span className="truncate text-sm font-bold text-slate-800">
+            {name}
+          </span>
           <span className="shrink-0 text-[10px] text-slate-400">{role}</span>
           <span
             className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
@@ -68,7 +70,9 @@ function PersonRow({
             {bubble.text}
           </p>
         )}
-        {task && <p className="mt-0.5 truncate text-[11px] text-slate-400">{task}</p>}
+        {task && (
+          <p className="mt-0.5 truncate text-[11px] text-slate-400">{task}</p>
+        )}
       </div>
     </li>
   );
@@ -84,7 +88,9 @@ export function StalkerPeoplePanel(): ReactNode {
   return (
     <section className="flex min-h-0 flex-1 flex-col rounded-2xl border border-slate-200/70 bg-white p-3 shadow-sm">
       <header className="flex items-center justify-between px-1 pb-1">
-        <h2 className="text-sm font-bold text-slate-800">{t("stalker.officePeople")}</h2>
+        <h2 className="text-sm font-bold text-slate-800">
+          {t("stalker.officePeople")}
+        </h2>
         <span className="text-[11px] text-slate-400">
           {t("stalker.peopleCount", { count: headcount })}
         </span>
@@ -101,7 +107,8 @@ export function StalkerPeoplePanel(): ReactNode {
           task={boss.currentTask}
         />
         {agentList.map((agent) => {
-          const name = agent.name ?? `${t("agentStatus.agent")} #${agent.number}`;
+          const name =
+            agent.name ?? `${t("agentStatus.agent")} #${agent.number}`;
           return (
             <PersonRow
               key={agent.id}
@@ -110,7 +117,9 @@ export function StalkerPeoplePanel(): ReactNode {
               name={name}
               role={agent.characterType ?? t("stalker.roleSub")}
               stateKey={agent.backendState}
-              stateLabel={t(`agentState.${agent.backendState}` as TranslationKey)}
+              stateLabel={t(
+                `agentState.${agent.backendState}` as TranslationKey,
+              )}
               bubble={agent.bubble.content}
               task={agent.currentTask}
             />

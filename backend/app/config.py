@@ -6,6 +6,9 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _BACKEND_DIR = Path(__file__).parent.parent.resolve()
+
+#: Distribution name in backend/pyproject.toml (also the `uvx` command name).
+DIST_NAME = "claude-stalker"
 _DEFAULT_DB_PATH = _BACKEND_DIR / "visualizer.db"
 
 
@@ -16,7 +19,7 @@ def _resolve_version() -> str:
     the distribution is not installed so OpenAPI docs still render.
     """
     try:
-        return importlib.metadata.version("claude-office-visualizer")
+        return importlib.metadata.version(DIST_NAME)
     except importlib.metadata.PackageNotFoundError:
         return "0.0.0+local"
 

@@ -13,7 +13,7 @@ open docs/concept/index.html
 
 **기본 UI = Stalker 전용 (레거시 claude-office UI 숨김)**
 
-- **Buggy Studio** 팩: repo 루트 [`buggy/`](buggy/) → `frontend/public/assets/buggy` 심볼릭 링크
+- 바닥·벽·가구는 이미지 에셋 없이 코드로 그립니다: [`stalkerFurnitureDraw.ts`](frontend/src/systems/stalkerFurnitureDraw.ts), [`stalkerOfficeDraw.ts`](frontend/src/systems/stalkerOfficeDraw.ts), 색은 [`stalkerPalette.ts`](frontend/src/constants/stalkerPalette.ts)
 - 레이아웃: [`stalkerFloorLayout.ts`](frontend/src/constants/stalkerFloorLayout.ts) (바닥·벽·방별 prop)
 - 화면: 3단 레이아웃 [`StalkerShell`](frontend/src/components/stalker/StalkerShell.tsx) (좌 층·세션 / 중 아이소 캔버스 / 우 활동·로그) + [`StalkerGameCanvas`](frontend/src/components/stalker/StalkerGameCanvas.tsx)
 - 아이소 그리드: [`stalkerIsoCoords.ts`](frontend/src/systems/stalkerIsoCoords.ts) + [`stalkerFloorLayout.ts`](frontend/src/constants/stalkerFloorLayout.ts)
@@ -54,6 +54,36 @@ export STALKER_CURSOR_TRANSCRIPT_ROOTS="$HOME/.cursor,/custom/transcripts"
 | 도구 실패 말풍선 | 💦 + Stalker HTML 말풍선 |
 | 멀티층 빌딩 | Shell Floors UI (3F 고정, upstream Building은 레거시) |
 | 엘리베이터 출퇴근 | 엘리베이터 zone + 에이전트 phase 스냅 |
+
+## 공유하기 (`uvx` 한 줄 실행)
+
+화면 + 백엔드 + Claude Code 훅 설치기를 wheel 파일 **하나**로 묶습니다.
+
+```bash
+make dist        # → dist/claude_stalker-<버전>-py3-none-any.whl
+```
+
+받는 사람은 [uv](https://docs.astral.sh/uv/)만 있으면 됩니다.
+
+```bash
+uvx --from ./claude_stalker-0.25.0-py3-none-any.whl claude-stalker
+# GitHub Release에 올렸다면 파일 대신 URL을 넣어도 됩니다
+```
+
+처음 실행하면:
+
+1. `~/.claude/claude-office-config.env` 생성 (기존 API 키는 그대로 유지)
+2. `claude-office-hook` 설치 (`uv tool install`) + `~/.claude/settings.json`에 훅 등록 → **Claude Code를 한 번 재시작**
+3. `http://127.0.0.1:8000`에서 서버를 띄우고 브라우저를 엽니다 (이미 켜져 있으면 브라우저만 엽니다)
+
+DB는 `~/.claude-stalker/visualizer.db`에 저장됩니다.
+
+| 옵션 | 설명 |
+|---|---|
+| `--port 8123` | 다른 포트 사용 (훅 설정의 주소도 같이 바뀜) |
+| `--no-browser` | 브라우저 자동 열기 끄기 |
+| `--skip-hooks` | 훅 설치·등록 건너뛰기 |
+| `--reinstall-hooks` | 이 빌드에 들어있는 훅으로 다시 설치 |
 
 ## 원저작
 

@@ -1,6 +1,6 @@
 .PHONY: install install-all dev backend frontend simulate checkall lint fmt test typecheck gen-types \
 	hooks-install hooks-uninstall hooks-reinstall hooks-status hooks-logs hooks-logs-follow hooks-logs-clear \
-	hooks-debug-on hooks-debug-off clean clean-db clean-all \
+	hooks-debug-on hooks-debug-off clean clean-db clean-all dist desktop \
 	opencode-install opencode-uninstall opencode-reinstall opencode-build \
 	dev-tmux dev-tmux-kill dev-tmux-backend dev-tmux-frontend \
 	build-static frontend-build-static \
@@ -161,6 +161,13 @@ clean:			# Remove build artifacts
 
 clean-all: clean clean-db hooks-logs-clear		# Remove everything
 	@echo "All build artifacts and data cleaned"
+
+dist:			# Build the shareable claude-stalker wheel (UI + backend + hooks)
+	./scripts/build-dist.sh
+
+desktop:			# Build the double-click app for this OS (macOS .dmg / Windows installer)
+	uv run --project backend --with pyinstaller --with pystray --with pillow --with ./hooks \
+		python scripts/build_desktop.py
 
 # Docker targets
 docker-build:

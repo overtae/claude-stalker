@@ -22,6 +22,8 @@ const MIN_VISIBLE_FLOORS = 4;
 export interface StalkerLeftRailProps {
   floors: OfficeFloor[];
   activeFloorKey: string | null;
+  /** Building name from settings; shown instead of the generic tag. */
+  buildingName: string | null;
   sessionsLoading: boolean;
   sessionId: string;
   now: number;
@@ -34,15 +36,18 @@ function splitFloors(
   now: number,
 ): { visible: OfficeFloor[]; idle: OfficeFloor[] } {
   const byRecency = [...floors].sort((a, b) =>
-    b.lastUpdated.localeCompare(a.lastUpdated),
+    (b.lastUpdated ?? "").localeCompare(a.lastUpdated ?? ""),
   );
   const keep = new Set(
     byRecency
       .filter(
         (f, i) =>
           f.key === activeKey ||
+          // floors you set up in settings always stay on the board
+          f.isConfigured ||
           i < MIN_VISIBLE_FLOORS ||
-          now - new Date(f.lastUpdated).getTime() < IDLE_FLOOR_MS,
+          (f.lastUpdated !== null &&
+            now - new Date(f.lastUpdated).getTime() < IDLE_FLOOR_MS),
       )
       .map((f) => f.key),
   );
@@ -56,6 +61,7 @@ function splitFloors(
 export function StalkerLeftRail({
   floors,
   activeFloorKey,
+  buildingName,
   sessionsLoading,
   sessionId,
   now,
@@ -76,14 +82,16 @@ export function StalkerLeftRail({
           <Building2 size={16} className="text-slate-500" aria-hidden />
           {t("stalker.floorGuide")}
         </h2>
-        <span className="text-[9px] font-bold tracking-[0.18em] text-slate-400">
-          {t("stalker.floorGuideTag")}
+        <span className="max-w-[45%] truncate text-[9px] font-bold tracking-[0.18em] text-slate-400">
+          {buildingName ?? t("stalker.floorGuideTag")}
         </span>
       </div>
 
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pb-2 pr-0.5">
         {sessionsLoading && floors.length === 0 && (
-          <p className="px-2 text-xs text-slate-500">{t("stalker.sessionsLoading")}</p>
+          <p className="px-2 text-xs text-slate-500">
+            {t("stalker.sessionsLoading")}
+          </p>
         )}
         {!sessionsLoading && floors.length === 0 && (
           <p className="px-2 text-xs leading-relaxed text-slate-500">
@@ -104,7 +112,11 @@ export function StalkerLeftRail({
               key={floor.key}
               floor={floor}
               now={now}
-              onSelect={() => void onSessionSelect(floor.sessions[0].id)}
+              onSelect={
+                floor.sessions[0]
+                  ? () => void onSessionSelect(floor.sessions[0].id)
+                  : undefined
+              }
             />
           ),
         )}
@@ -134,28 +146,43 @@ function FloorHeader({
   isActive: boolean;
 }): ReactNode {
   const { t } = useTranslation();
-  const live = isRecentlyActive(floor.lastUpdated, now);
-  const when = live ? t("stalker.activeNow") : formatAgo(t, floor.lastUpdated, now);
+  const live =
+    floor.lastUpdated !== null && isRecentlyActive(floor.lastUpdated, now);
+  const when =
+    floor.lastUpdated === null
+      ? null
+      : live
+        ? t("stalker.activeNow")
+        : formatAgo(t, floor.lastUpdated, now);
 
   return (
     <div className="flex items-center gap-3">
       <span
         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-extrabold ${
-          isActive ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-500"
+          isActive ? "text-white" : "bg-slate-100 text-slate-500"
         }`}
+        // a floor's accent from the building settings colours its active badge
+        style={isActive ? { background: floor.accent ?? "#1e293b" } : undefined}
       >
         {floor.floor}F
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-bold text-slate-800">
+          {floor.icon && (
+            <span className="mr-1" aria-hidden>
+              {floor.icon}
+            </span>
+          )}
           {floor.name}
         </span>
         <span className="block truncate text-[11px] text-slate-500">
-          {t("stalker.floorSessions", { count: floor.sessions.length })} · {when}
+          {floor.sessions.length === 0
+            ? t("stalker.floorEmpty")
+            : `${t("stalker.floorSessions", { count: floor.sessions.length })} · ${when}`}
         </span>
       </span>
       <span
-        className={`h-2 w-2 shrink-0 rounded-full ${live ? "bg-teal-500" : "bg-slate-300"}`}
+        className={`h-2 w-2 shrink-0 rounded-full ${live ? "bg-emerald-500" : "bg-slate-300"}`}
         aria-hidden
       />
     </div>
@@ -169,13 +196,15 @@ function FloorCard({
 }: {
   floor: OfficeFloor;
   now: number;
-  onSelect: () => void;
+  /** Undefined for a configured floor that has no sessions yet. */
+  onSelect?: () => void;
 }): ReactNode {
   return (
     <button
       type="button"
       onClick={onSelect}
-      className="w-full rounded-2xl border border-slate-200/70 bg-white px-3 py-2.5 text-left shadow-sm transition hover:-translate-y-px hover:border-slate-300 hover:shadow"
+      disabled={!onSelect}
+      className="w-full rounded-2xl border border-slate-200/70 bg-white px-3 py-2.5 text-left shadow-sm transition enabled:hover:-translate-y-px enabled:hover:border-slate-300 enabled:hover:shadow disabled:cursor-default disabled:opacity-70"
     >
       <FloorHeader floor={floor} now={now} isActive={false} />
     </button>
@@ -200,7 +229,7 @@ function ActiveFloorCard({
   const others = floor.sessions.filter((s) => s.id !== sessionId);
 
   return (
-    <div className="rounded-2xl border border-teal-300/80 bg-white px-3 py-2.5 shadow-sm ring-2 ring-teal-100">
+    <div className="rounded-2xl border border-claude-300/80 bg-white px-3 py-2.5 shadow-sm ring-2 ring-claude-100">
       <FloorHeader floor={floor} now={now} isActive={true} />
       <div className="mt-2.5 border-t border-slate-100 pt-2">
         <button
@@ -208,10 +237,16 @@ function ActiveFloorCard({
           onClick={() => void setAutoFollow(!autoFollow)}
           aria-pressed={autoFollow}
           className={`flex w-full items-center gap-1.5 rounded-lg px-1.5 py-1 text-left text-xs transition-colors ${
-            autoFollow ? "text-teal-700" : "text-slate-500 hover:text-slate-700"
+            autoFollow
+              ? "text-claude-700"
+              : "text-slate-500 hover:text-slate-700"
           }`}
         >
-          <RefreshCw size={13} className={autoFollow ? "text-teal-500" : "text-slate-400"} aria-hidden />
+          <RefreshCw
+            size={13}
+            className={autoFollow ? "text-claude-500" : "text-slate-400"}
+            aria-hidden
+          />
           {t("stalker.autoFollow")}
         </button>
 
@@ -260,17 +295,31 @@ function SessionRow({
         onClick={onSelect}
         aria-current={isCurrent ? "true" : undefined}
         className={`flex w-full items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs transition-colors ${
-          isCurrent ? "bg-slate-100 font-semibold text-slate-800" : "text-slate-600 hover:bg-slate-50"
+          isCurrent
+            ? "bg-slate-100 font-semibold text-slate-800"
+            : "text-slate-600 hover:bg-slate-50"
         }`}
       >
-        {isCurrent && <Pin size={12} className="shrink-0 rotate-45 text-teal-600" aria-hidden />}
-        <span className="min-w-0 flex-1 truncate">{sessionTitle(t, session)}</span>
+        {isCurrent && (
+          <Pin
+            size={12}
+            className="shrink-0 rotate-45 text-claude-600"
+            aria-hidden
+          />
+        )}
+        <span className="min-w-0 flex-1 truncate">
+          {sessionTitle(t, session)}
+        </span>
         <span
           className={`shrink-0 text-[10px] ${
-            live && isCurrent ? "font-semibold text-teal-600" : "text-slate-400"
+            live && isCurrent
+              ? "font-semibold text-claude-600"
+              : "text-slate-400"
           }`}
         >
-          {live && isCurrent ? t("stalker.activeNow") : formatAgo(t, session.updatedAt, now)}
+          {live && isCurrent
+            ? t("stalker.activeNow")
+            : formatAgo(t, session.updatedAt, now)}
         </span>
       </button>
     </li>

@@ -3,12 +3,25 @@
 import { useEffect, useCallback, type ReactNode } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useAttentionStore, type UrgencyLevel } from "@/stores/attentionStore";
+import { useTranslation } from "@/hooks/useTranslation";
+import type { TranslationKey } from "@/i18n";
+import type { EventType } from "@/types";
 
 const URGENCY_COLORS: Record<UrgencyLevel, string> = {
-  critical: "border-red-500 bg-red-950/90 text-red-400",
-  high: "border-orange-500 bg-orange-950/90 text-orange-400",
-  low: "border-green-500 bg-green-950/90 text-green-400",
-  info: "border-blue-500 bg-blue-950/90 text-blue-400",
+  critical: "border-rose-200 bg-rose-50/95 text-rose-700",
+  high: "border-amber-200 bg-amber-50/95 text-amber-800",
+  low: "border-emerald-200 bg-emerald-50/95 text-emerald-700",
+  info: "border-slate-200 bg-white/95 text-slate-700",
+};
+
+/** Human sentence per event type; anything else falls back to the raw title. */
+const TOAST_KEYS: Partial<Record<EventType, TranslationKey>> = {
+  permission_request: "attention.toast.permissionRequest",
+  error: "attention.toast.error",
+  stop: "attention.toast.stop",
+  task_completed: "attention.toast.taskCompleted",
+  subagent_start: "attention.toast.agentArrived",
+  background_task_notification: "attention.toast.backgroundTask",
 };
 
 const URGENCY_ICONS: Record<UrgencyLevel, string> = {
@@ -38,7 +51,7 @@ export default function AttentionToasts(): ReactNode {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-16 right-4 z-50 flex flex-col gap-2 w-80 pointer-events-none">
+    <div className="pointer-events-none fixed left-1/2 top-4 z-50 flex w-80 -translate-x-1/2 flex-col gap-2">
       {toasts.slice(0, 5).map((toast) => (
         <ToastItem
           key={toast.id}
@@ -60,6 +73,7 @@ function ToastItem({
     id: string;
     urgencyLevel: UrgencyLevel;
     agentName: string | null;
+    eventType: EventType;
     title: string;
     description: string;
     autoDismissMs: number | null;
@@ -67,9 +81,14 @@ function ToastItem({
   onClick: () => void;
   onDismiss: () => void;
 }): ReactNode {
+  const { t } = useTranslation();
   const colorClass = URGENCY_COLORS[toast.urgencyLevel];
   const icon = URGENCY_ICONS[toast.urgencyLevel];
-  const headline = toast.agentName ?? toast.title;
+  const key = TOAST_KEYS[toast.eventType];
+  const who = toast.agentName ?? t("stalker.claude");
+  const headline = key
+    ? t(key, { agentName: who, taskDescription: toast.description })
+    : t(`eventType.${toast.eventType}` as TranslationKey);
 
   useEffect(() => {
     if (toast.autoDismissMs === null) return;
@@ -79,7 +98,7 @@ function ToastItem({
 
   return (
     <div
-      className={`pointer-events-auto flex items-start gap-2 px-3 py-2 rounded-lg border cursor-pointer animate-in slide-in-from-right-2 duration-300 ${colorClass}`}
+      className={`pointer-events-auto flex cursor-pointer items-start gap-2 rounded-2xl border px-3 py-2 shadow-lg shadow-slate-900/5 backdrop-blur animate-in slide-in-from-top-2 duration-300 ${colorClass}`}
       onClick={onClick}
       role="alert"
     >
@@ -96,7 +115,7 @@ function ToastItem({
           onDismiss();
         }}
         className="text-xs opacity-50 hover:opacity-100 shrink-0"
-        aria-label="Dismiss"
+        aria-label={t("modal.close")}
       >
         {"\u2715"}
       </button>

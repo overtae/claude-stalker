@@ -23,12 +23,18 @@ interface StalkerSessionCardProps {
   onOpenSettings: () => void;
 }
 
-function Meter({ value, warn = false }: { value: number; warn?: boolean }): ReactNode {
+function Meter({
+  value,
+  warn = false,
+}: {
+  value: number;
+  warn?: boolean;
+}): ReactNode {
   const pct = Math.round(Math.min(1, Math.max(0, value)) * 100);
   return (
     <span className="mt-1.5 block h-1 overflow-hidden rounded-full bg-slate-200/80">
       <span
-        className={`block h-full rounded-full transition-[width] duration-500 ${warn ? "bg-amber-400" : "bg-teal-500"}`}
+        className={`block h-full rounded-full transition-[width] duration-500 ${warn ? "bg-rose-400" : "bg-claude-500"}`}
         style={{ width: `${pct}%` }}
       />
     </span>
@@ -49,7 +55,9 @@ function StatTile({
   return (
     <div className="min-w-0 rounded-xl bg-slate-50 px-2.5 py-2">
       <p className="text-[10px] font-medium text-slate-400">{label}</p>
-      <p className="mt-0.5 truncate text-sm font-bold text-slate-800">{value}</p>
+      <p className="mt-0.5 truncate text-sm font-bold text-slate-800">
+        {value}
+      </p>
       {children}
       <p className="mt-1 truncate text-[10px] text-slate-400" title={hint}>
         {hint}
@@ -70,13 +78,17 @@ export function StalkerSessionCard({
 
   const weather = getSessionWeather(whiteboard);
   const todosDone = todos.filter((todo) => todo.status === "completed").length;
-  const todosActive = todos.filter((todo) => todo.status === "in_progress").length;
+  const todosActive = todos.filter(
+    (todo) => todo.status === "in_progress",
+  ).length;
 
   return (
     <section className="shrink-0 rounded-2xl border border-slate-200/70 bg-white p-3 shadow-sm">
       <div className="flex items-start gap-2 px-1">
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-medium text-slate-400">{t("stalker.currentSession")}</p>
+          <p className="text-[10px] font-medium text-slate-400">
+            {t("stalker.currentSession")}
+          </p>
           <p className="truncate text-sm font-bold text-slate-800">
             {session ? projectName(t, session) : "—"}
           </p>
@@ -111,7 +123,9 @@ export function StalkerSessionCard({
               {t(`stalker.weather.${weather.kind}` as TranslationKey)}
             </>
           }
-          hint={t("stalker.successRate", { pct: Math.round(weather.successRate * 100) })}
+          hint={t("stalker.successRate", {
+            pct: Math.round(weather.successRate * 100),
+          })}
         />
         <StatTile
           label={t("stalker.context")}

@@ -12,11 +12,7 @@ import {
 } from "@/stores/gameStore";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { TranslationKey } from "@/i18n";
-import {
-  FURNITURE_SCALE,
-  OFFICE_FURNITURE,
-  toScreen,
-} from "@/constants/stalkerFloorLayout";
+import { OFFICE_FURNITURE, toScreen } from "@/constants/stalkerFloorLayout";
 import {
   WHITEBOARD_QUAD,
   poly,
@@ -25,8 +21,9 @@ import {
 import { StalkerPill } from "@/components/stalker/StalkerPixiBits";
 import { getSessionWeather, WEATHER_ICONS } from "@/utils/sessionWeather";
 import { CLAUDE_COLOR, agentColor } from "@/utils/stalkerFormat";
+import { isoDepth } from "@/systems/stalkerIsoCoords";
 
-const OUTLINE = 0x3a3330;
+const OUTLINE = 0xb5a38c;
 /** Wall props sit just above the static shell, below furniture. */
 const Z_WALL_PROPS = -950;
 const Z_LABEL = 100000;
@@ -35,7 +32,11 @@ const Z_LABEL = 100000;
 // Whiteboard hotspot
 // ---------------------------------------------------------------------------
 
-export function WhiteboardHotspot({ onOpen }: { onOpen: () => void }): ReactNode {
+export function WhiteboardHotspot({
+  onOpen,
+}: {
+  onOpen: () => void;
+}): ReactNode {
   const { t } = useTranslation();
   const [hover, setHover] = useState(false);
   const draw = useCallback(
@@ -43,10 +44,10 @@ export function WhiteboardHotspot({ onOpen }: { onOpen: () => void }): ReactNode
       g.clear();
       poly(g, WHITEBOARD_QUAD);
       // near-invisible fill keeps the whole board clickable
-      g.fill({ color: 0x14b8a6, alpha: hover ? 0.12 : 0.001 });
+      g.fill({ color: 0xd97757, alpha: hover ? 0.12 : 0.001 });
       if (hover) {
         poly(g, WHITEBOARD_QUAD);
-        g.stroke({ color: 0x14b8a6, width: 3, alpha: 0.9, join: "round" });
+        g.stroke({ color: 0xd97757, width: 3, alpha: 0.9, join: "round" });
       }
     },
     [hover],
@@ -85,7 +86,7 @@ export function WhiteboardHotspot({ onOpen }: { onOpen: () => void }): ReactNode
 const COUNTER = OFFICE_FURNITURE.find((f) => f.id === "cafe-counter");
 const MAX_CUPS_SHOWN = 3;
 /** Counter-top height above the floor (native px × furniture scale). */
-const COUNTER_TOP = 42 * FURNITURE_SCALE;
+const COUNTER_TOP = 30;
 
 export function CoffeeCups(): ReactNode {
   const { t } = useTranslation();
@@ -99,7 +100,10 @@ export function CoffeeCups(): ReactNode {
         return;
       }
       for (let i = 0; i < shown; i++) {
-        const p = toScreen(COUNTER.fp.col + COUNTER.fp.w - 0.25 - i * 0.22, COUNTER.fp.row + COUNTER.fp.d / 2);
+        const p = toScreen(
+          COUNTER.fp.col + COUNTER.fp.w - 0.25 - i * 0.22,
+          COUNTER.fp.row + COUNTER.fp.d / 2,
+        );
         const x = p.x;
         const y = p.y - COUNTER_TOP;
         g.roundRect(x - 3.5, y - 8, 7, 8, 2);
@@ -264,7 +268,12 @@ export function NewsTicker(): ReactNode {
   const [mask, setMask] = useState<Graphics | null>(null);
 
   return (
-    <pixiContainer x={start.x} y={start.y - TICKER.top} skew={{ x: 0, y: WALL_SLOPE }} zIndex={Z_WALL_PROPS}>
+    <pixiContainer
+      x={start.x}
+      y={start.y - TICKER.top}
+      skew={{ x: 0, y: WALL_SLOPE }}
+      zIndex={Z_WALL_PROPS}
+    >
       <pixiGraphics draw={drawBoard} />
       <pixiGraphics draw={drawMask} ref={setMask} />
       <pixiText
@@ -274,7 +283,98 @@ export function NewsTicker(): ReactNode {
         y={1}
         mask={mask}
         resolution={2}
-        style={{ fontFamily: "Pretendard, system-ui, sans-serif", fontSize: 10, fontWeight: "700", fill: 0xfbbf24 }}
+        style={{
+          fontFamily: "Pretendard, system-ui, sans-serif",
+          fontSize: 10,
+          fontWeight: "700",
+          fill: 0xfbbf24,
+        }}
+      />
+    </pixiContainer>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Office cat napping on the lobby rug
+// ---------------------------------------------------------------------------
+
+const CAT_SPOT = { col: 11.7, row: 9.0 };
+const CAT_FUR = 0xf4b183;
+const CAT_STRIPE = 0xe08f5a;
+const BREATH_SPEED = 0.0025;
+
+function drawCat(g: Graphics): void {
+  g.clear();
+  g.ellipse(0, 2, 17, 5);
+  g.fill({ color: 0x5b4636, alpha: 0.14 });
+  // curled tail around the front
+  g.moveTo(12, -2)
+    .quadraticCurveTo(16, 4, 2, 4)
+    .quadraticCurveTo(-8, 4, -10, 0);
+  g.stroke({ color: CAT_FUR, width: 4.5, cap: "round" });
+  // body loaf
+  g.ellipse(2, -6, 14, 8);
+  g.fill({ color: CAT_FUR });
+  for (const dx of [-1, 4, 9]) {
+    g.moveTo(dx, -13).quadraticCurveTo(dx + 1.5, -9, dx, -6);
+  }
+  g.stroke({ color: CAT_STRIPE, width: 1.6, cap: "round" });
+  // head + ears
+  g.poly([-15, -12, -13, -20, -9, -14]);
+  g.poly([-7, -14, -4, -20, -2, -12]);
+  g.fill({ color: CAT_FUR });
+  g.poly([-13.5, -14, -12.8, -17.5, -10.8, -14.5]);
+  g.poly([-6, -14.5, -4.3, -17.5, -3.5, -14]);
+  g.fill({ color: 0xf7c6c9 });
+  g.circle(-8.5, -9, 7.5);
+  g.fill({ color: CAT_FUR });
+  // closed eyes, nose, cheeks
+  // arcs continue the current path, so start each one at its own first point
+  for (const cx of [-11.3, -6]) {
+    const start = 0.2;
+    g.moveTo(cx + Math.cos(start) * 1.6, -9.5 + Math.sin(start) * 1.6);
+    g.arc(cx, -9.5, 1.6, start, Math.PI - start);
+  }
+  g.stroke({ color: 0x6b4430, width: 1.1, cap: "round" });
+  g.circle(-8.6, -7, 0.9);
+  g.fill({ color: 0xe5737f });
+  g.circle(-13, -6.6, 1.6);
+  g.circle(-4.2, -6.6, 1.6);
+  g.fill({ color: 0xff8fa3, alpha: 0.4 });
+}
+
+export function CozyCat(): ReactNode {
+  const bodyRef = useRef<Graphics | null>(null);
+  const zzzRef = useRef<Text | null>(null);
+  const clock = useRef(0);
+  const at = toScreen(CAT_SPOT.col, CAT_SPOT.row);
+
+  useTick((ticker) => {
+    clock.current += ticker.deltaMS;
+    const breath = Math.sin(clock.current * BREATH_SPEED);
+    if (bodyRef.current) {
+      bodyRef.current.scale.y = 1 + breath * 0.035;
+    }
+    if (zzzRef.current) {
+      zzzRef.current.y = -30 - (breath + 1) * 2;
+      zzzRef.current.alpha = 0.55 + breath * 0.3;
+    }
+  });
+
+  return (
+    <pixiContainer
+      x={at.x}
+      y={at.y}
+      zIndex={isoDepth(CAT_SPOT.col, CAT_SPOT.row)}
+    >
+      <pixiGraphics ref={bodyRef} draw={drawCat} />
+      <pixiText
+        ref={zzzRef}
+        text="💤"
+        x={-2}
+        y={-30}
+        style={{ fontSize: 11 }}
+        resolution={2}
       />
     </pixiContainer>
   );

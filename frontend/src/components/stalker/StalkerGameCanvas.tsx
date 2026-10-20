@@ -9,6 +9,7 @@ import {
   Application as PixiApplication,
 } from "pixi.js";
 import {
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -21,7 +22,6 @@ import {
   TransformComponent,
   type ReactZoomPanPinchRef,
 } from "react-zoom-pan-pinch";
-import { useBuggyTextures } from "@/hooks/useBuggyTextures";
 import { useAnimationSystem } from "@/systems/animationSystem";
 import { wireGameRuntime, unwireGameRuntime } from "@/systems/gameRuntime";
 import { performSoftReset, getHmrVersion } from "@/systems/hmrCleanup";
@@ -36,7 +36,9 @@ import {
   resolveWalkZone,
   toScreen,
   type GridPoint,
+  type PlacedFurniture,
 } from "@/constants/stalkerFloorLayout";
+import { drawFurniture } from "@/systems/stalkerFurnitureDraw";
 import { useGameStore, selectAgents, selectBoss } from "@/stores/gameStore";
 import { useShallow } from "zustand/react/shallow";
 import type { AgentAnimationState } from "@/stores/gameStore";
@@ -54,8 +56,11 @@ import {
   roomLabelPoint,
 } from "@/systems/stalkerOfficeDraw";
 import { useTranslation } from "@/hooks/useTranslation";
+import { usePreferencesStore } from "@/stores/preferencesStore";
+import { useAttentionStore } from "@/stores/attentionStore";
 import {
   CoffeeCups,
+  CozyCat,
   EmployeeFrame,
   NewsTicker,
   WhiteboardHotspot,
@@ -71,6 +76,8 @@ const NAME_MAX = 12;
 const FIT_PADDING = 1.08;
 const FIT_ANIMATION_MS = 250;
 const MINUTE_MS = 60_000;
+/** Agent id the attention popup uses for the main Claude session. */
+const BOSS_FOCUS_ID = "boss";
 const CLOCK_POLL_MS = 10_000;
 
 /** zIndex bands: shell < rugs < zone glow < furniture/people < labels */
@@ -91,15 +98,36 @@ function agentGridPosition(
 ): GridPoint {
   if (ELEVATOR_PHASES.has(agent.phase)) {
     const e = WALK_POINTS.elevator;
-    return { col: e.col + (index % 3) * 0.7, row: e.row - 0.6 + Math.floor(index / 3) * 0.7 };
+    return {
+      col: e.col + (index % 3) * 0.7,
+      row: e.row - 0.6 + Math.floor(index / 3) * 0.7,
+    };
   }
   if (index < DEV_SEATS.length) {
     return DEV_SEATS[index];
   }
   const overflow = index - DEV_SEATS.length;
   const lobby = WALK_POINTS.lobby;
-  return { col: lobby.col - 1.5 + (overflow % 4) * 0.8, row: lobby.row + 1 + Math.floor(overflow / 4) * 0.8 };
+  return {
+    col: lobby.col - 1.5 + (overflow % 4) * 0.8,
+    row: lobby.row + 1 + Math.floor(overflow / 4) * 0.8,
+  };
 }
+
+/** One procedurally drawn furniture piece, redrawn only when it changes. */
+const FurniturePiece = memo(function FurniturePiece({
+  item,
+  pulse,
+}: {
+  item: PlacedFurniture;
+  pulse: boolean;
+}): ReactNode {
+  const draw = useCallback(
+    (g: Graphics) => drawFurniture(g, item.fp, item.piece, { pulse }),
+    [item, pulse],
+  );
+  return <pixiGraphics draw={draw} zIndex={item.z} />;
+});
 
 /** Epoch ms floored to the minute; re-renders once a minute for the wall clock. */
 function useMinuteClock(): number {
@@ -123,7 +151,6 @@ export function StalkerGameCanvas(): ReactNode {
   const transformRef = useRef<ReactZoomPanPinchRef>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const hmrVersion = getHmrVersion();
-  const { textures, loaded, missingCount } = useBuggyTextures();
 
   useAnimationSystem();
   useEffect(() => {
@@ -184,7 +211,10 @@ export function StalkerGameCanvas(): ReactNode {
         if (Math.abs(dc) < 0.01 && Math.abs(dr) < 0.01) {
           return prev === target ? prev : target;
         }
-        return { col: prev.col + dc * BOSS_LERP, row: prev.row + dr * BOSS_LERP };
+        return {
+          col: prev.col + dc * BOSS_LERP,
+          row: prev.row + dr * BOSS_LERP,
+        };
       });
       raf = requestAnimationFrame(tick);
     };
@@ -224,6 +254,17 @@ export function StalkerGameCanvas(): ReactNode {
     [placedAgents],
   );
 
+  const clickToFocus = usePreferencesStore((s) => s.clickToFocusEnabled);
+  const openFocusPopup = useAttentionStore((s) => s.openFocusPopup);
+  const focusOn = useCallback(
+    (agentId: string) =>
+      clickToFocus
+        ? (clientX: number, clientY: number) =>
+            openFocusPopup(agentId, clientX, clientY)
+        : undefined,
+    [clickToFocus, openFocusPopup],
+  );
+
   const [isWhiteboardOpen, setWhiteboardOpen] = useState(false);
   const openWhiteboard = useCallback(() => setWhiteboardOpen(true), []);
   const closeWhiteboard = useCallback(() => setWhiteboardOpen(false), []);
@@ -239,23 +280,11 @@ export function StalkerGameCanvas(): ReactNode {
     [walkZone],
   );
 
-  const assetBanner =
-    loaded && missingCount > 0
-      ? textures.size === 0
-        ? t("stalker.assetError")
-        : t("stalker.assetPartial", { count: missingCount })
-      : null;
-
   return (
     <div
       ref={viewportRef}
       className="relative h-full w-full overflow-hidden bg-[#eef2f6]"
     >
-      {assetBanner && (
-        <p className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-lg bg-amber-50 px-2 py-1 text-xs text-amber-900">
-          {assetBanner}
-        </p>
-      )}
       {isWhiteboardOpen && <StalkerWhiteboard onClose={closeWhiteboard} />}
       <p className="pointer-events-none absolute bottom-3 right-4 z-20 text-[11px] text-slate-400">
         {t("stalker.zoomHint")}
@@ -264,48 +293,41 @@ export function StalkerGameCanvas(): ReactNode {
         className="absolute inset-0"
         onDoubleClick={() => fitToView(FIT_ANIMATION_MS)}
       >
-      <TransformWrapper
-        ref={transformRef}
-        initialScale={1}
-        minScale={0.4}
-        maxScale={2.5}
-        centerZoomedOut={false}
-        limitToBounds={false}
-        wheel={{ step: 0.08 }}
-        doubleClick={{ disabled: true }}
-      >
-        <StalkerZoomControls onFit={() => fitToView(FIT_ANIMATION_MS)} />
-        <TransformComponent
-          wrapperClass="h-full w-full"
-          contentClass="h-full w-full"
+        <TransformWrapper
+          ref={transformRef}
+          initialScale={1}
+          minScale={0.4}
+          maxScale={2.5}
+          centerZoomedOut={false}
+          limitToBounds={false}
+          wheel={{ step: 0.08 }}
+          doubleClick={{ disabled: true }}
         >
-          <div
-            className="relative h-full w-full"
-            style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT }}
+          <StalkerZoomControls onFit={() => fitToView(FIT_ANIMATION_MS)} />
+          <TransformComponent
+            wrapperClass="h-full w-full"
+            contentClass="h-full w-full"
           >
-            <Application
-              key={`stalker-${hmrVersion}`}
-              width={CANVAS_WIDTH}
-              height={CANVAS_HEIGHT}
-              backgroundColor={0xeef2f6}
-              autoDensity
-              resolution={
-                typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1
-              }
-              onInit={(app) => {
-                appRef.current = app;
-                app.stage.sortableChildren = true;
-              }}
+            <div
+              className="relative h-full w-full"
+              style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT }}
             >
-              {!loaded && (
-                <pixiText
-                  text={t("stalker.loadingAssets")}
-                  x={CANVAS_WIDTH / 2 - 100}
-                  y={CANVAS_HEIGHT / 2}
-                  style={{ fill: 0x64748b, fontSize: 16 }}
-                />
-              )}
-              {loaded && (
+              <Application
+                key={`stalker-${hmrVersion}`}
+                width={CANVAS_WIDTH}
+                height={CANVAS_HEIGHT}
+                backgroundColor={0xeef2f6}
+                autoDensity
+                resolution={
+                  typeof window !== "undefined"
+                    ? window.devicePixelRatio || 1
+                    : 1
+                }
+                onInit={(app) => {
+                  appRef.current = app;
+                  app.stage.sortableChildren = true;
+                }}
+              >
                 <>
                   <pixiGraphics draw={drawBackdrop} zIndex={Z_SHELL - 1} />
                   <pixiGraphics draw={drawShell} zIndex={Z_SHELL} />
@@ -314,25 +336,14 @@ export function StalkerGameCanvas(): ReactNode {
                   <NewsTicker />
                   <WhiteboardHotspot onOpen={openWhiteboard} />
                   <CoffeeCups />
-                  {OFFICE_FURNITURE.map((item) => {
-                    const texture = textures.get(item.path);
-                    if (!texture) {
-                      return null;
-                    }
-                    const pulse = item.zone === "server" && serverRackPulse;
-                    return (
-                      <pixiSprite
-                        key={item.id}
-                        texture={texture}
-                        x={item.x}
-                        y={pulse ? item.y - 2 : item.y}
-                        anchor={{ x: 0.5, y: 1 }}
-                        zIndex={item.z}
-                        scale={item.scale}
-                        tint={pulse ? 0xccfbf1 : 0xffffff}
-                      />
-                    );
-                  })}
+                  <CozyCat />
+                  {OFFICE_FURNITURE.map((item) => (
+                    <FurniturePiece
+                      key={item.id}
+                      item={item}
+                      pulse={item.zone === "server" && serverRackPulse}
+                    />
+                  ))}
                   <StalkerChibi
                     x={userPos.x}
                     y={userPos.y}
@@ -347,6 +358,7 @@ export function StalkerGameCanvas(): ReactNode {
                     color={CLAUDE_COLOR}
                     name={t("stalker.claude")}
                     tone="boss"
+                    onTap={focusOn(BOSS_FOCUS_ID)}
                   />
                   {placedAgents.map(({ agent, grid, x, y }) => (
                     <StalkerChibi
@@ -356,6 +368,7 @@ export function StalkerGameCanvas(): ReactNode {
                       zIndex={isoDepth(grid.col, grid.row)}
                       color={agentColor(agent.number)}
                       name={shortName(agent)}
+                      onTap={focusOn(agent.id)}
                     />
                   ))}
                   {OFFICE_ROOMS.map((room) => {
@@ -375,17 +388,16 @@ export function StalkerGameCanvas(): ReactNode {
                     );
                   })}
                 </>
-              )}
-            </Application>
-            <StalkerSpeechOverlays
-              bossBubble={boss.bubble.content}
-              bossX={bossPos.x}
-              bossY={bossPos.y - CHIBI_BUBBLE_OFFSET}
-              agents={overlayAgents}
-            />
-          </div>
-        </TransformComponent>
-      </TransformWrapper>
+              </Application>
+              <StalkerSpeechOverlays
+                bossBubble={boss.bubble.content}
+                bossX={bossPos.x}
+                bossY={bossPos.y - CHIBI_BUBBLE_OFFSET}
+                agents={overlayAgents}
+              />
+            </div>
+          </TransformComponent>
+        </TransformWrapper>
       </div>
     </div>
   );

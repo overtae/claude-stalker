@@ -25,14 +25,18 @@ from app.db.migrate import migrate_schema
 from app.db.models import EventRecord, SessionRecord
 from app.services.git_service import git_service
 
-STATIC_DIR = Path(__file__).parent.parent / "static"
+# Built frontend. Docker copies it next to the package (/app/static); the
+# packaged CLI (`claude-stalker`) ships it inside the wheel and points
+# STALKER_STATIC_DIR at it.
+STATIC_DIR = Path(os.environ.get("STALKER_STATIC_DIR") or Path(__file__).parent.parent / "static")
 
 _SERVE_STATIC = os.environ.get("SERVE_STATIC", "").lower() in ("1", "true", "yes")
 
 settings = get_settings()
 
 logging.basicConfig(
-    level=logging.INFO,
+    # The packaged CLI prints its own launch URL and quiets the dev chatter.
+    level=os.environ.get("STALKER_LOG_LEVEL", "INFO").upper(),
     format="%(message)s",
     handlers=[RichHandler(rich_tracebacks=settings.LOG_RICH_TRACEBACKS)],
 )

@@ -113,3 +113,7 @@ frontend/public/sprites/paid/
 .superpowers
 docs/superpowers
 .cc2cc-session-id
+
+# --- claude-stalker packaging (scripts/build-dist.sh) ---
+backend/app/static/
+backend/app/_bundled/

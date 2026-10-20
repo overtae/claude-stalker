@@ -60,9 +60,7 @@ export function StalkerSpeechOverlays({
 }: StalkerSpeechOverlaysProps): ReactNode {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-visible">
-      {bossBubble && (
-        <SpeechBubble content={bossBubble} x={bossX} y={bossY} />
-      )}
+      {bossBubble && <SpeechBubble content={bossBubble} x={bossX} y={bossY} />}
       {agents.map((agent) =>
         agent.bubble ? (
           <SpeechBubble

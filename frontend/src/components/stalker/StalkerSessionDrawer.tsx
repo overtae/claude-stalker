@@ -89,7 +89,7 @@ export function StalkerSessionDrawer({
                     onClick={() => void onSessionSelect(session.id)}
                     className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                       active
-                        ? "bg-teal-50 font-semibold text-teal-900"
+                        ? "bg-claude-50 font-semibold text-claude-900"
                         : "text-slate-700 hover:bg-slate-50"
                     }`}
                   >

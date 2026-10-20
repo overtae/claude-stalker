@@ -1,15 +1,22 @@
 "use client";
 
 import { useCallback, useMemo, type ReactNode } from "react";
-import { CanvasTextMetrics, TextStyle, type Graphics } from "pixi.js";
-
-const OUTLINE = 0x2f2a28;
+import {
+  CanvasTextMetrics,
+  TextStyle,
+  type FederatedPointerEvent,
+  type Graphics,
+} from "pixi.js";
+import { shade } from "@/constants/stalkerPalette";
 
 export type PillTone = "default" | "active" | "boss";
 
-const PILL_TONES: Record<PillTone, { bg: number; border: number; text: number }> = {
+const PILL_TONES: Record<
+  PillTone,
+  { bg: number; border: number; text: number }
+> = {
   default: { bg: 0xffffff, border: 0xe2e8f0, text: 0x475569 },
-  active: { bg: 0x0d9488, border: 0x0f766e, text: 0xffffff },
+  active: { bg: 0xd97757, border: 0xc4603f, text: 0xffffff },
   boss: { bg: 0xfff7ed, border: 0xfdba74, text: 0x9a3412 },
 };
 
@@ -82,12 +89,6 @@ export function StalkerPill({
 /** Pixel size of one Clawd block. */
 const PX = 4;
 
-function shade(color: number, factor: number): number {
-  const ch = (shift: number) =>
-    Math.max(0, Math.min(255, Math.round(((color >> shift) & 0xff) * factor)));
-  return (ch(16) << 16) | (ch(8) << 8) | ch(0);
-}
-
 type Block = [x: number, y: number, w: number, h: number];
 
 // Clawd, the Claude Code mascot, in block units with feet at y = 0.
@@ -108,7 +109,12 @@ const EYES: Block[] = [
 ];
 
 function rect(g: Graphics, [x, y, w, h]: Block, grow = 0): Graphics {
-  return g.rect(x * PX - grow, y * PX - grow, w * PX + grow * 2, h * PX + grow * 2);
+  return g.rect(
+    x * PX - grow,
+    y * PX - grow,
+    w * PX + grow * 2,
+    h * PX + grow * 2,
+  );
 }
 
 function drawClawd(g: Graphics, color: number): void {
@@ -118,9 +124,9 @@ function drawClawd(g: Graphics, color: number): void {
 
   // outline pass, then fills on top so joints merge cleanly
   for (const block of [BODY, ...ARMS, ...LEGS]) {
-    rect(g, block, 2);
+    rect(g, block, 1.5);
   }
-  g.fill({ color: OUTLINE });
+  g.fill({ color: shade(color, 0.6) });
 
   rect(g, BODY);
   for (const block of ARMS) {
@@ -152,6 +158,8 @@ interface StalkerChibiProps {
   color: number;
   name?: string;
   tone?: PillTone;
+  /** Click handler (viewport coords); omitted = not interactive. */
+  onTap?: (clientX: number, clientY: number) => void;
 }
 
 export function StalkerChibi({
@@ -161,11 +169,24 @@ export function StalkerChibi({
   color,
   name,
   tone = "default",
+  onTap,
 }: StalkerChibiProps): ReactNode {
   const draw = useCallback((g: Graphics) => drawClawd(g, color), [color]);
 
   return (
-    <pixiContainer x={x} y={y} zIndex={zIndex} sortableChildren={true}>
+    <pixiContainer
+      x={x}
+      y={y}
+      zIndex={zIndex}
+      sortableChildren={true}
+      eventMode={onTap ? "static" : "auto"}
+      cursor={onTap ? "pointer" : "default"}
+      onPointerTap={
+        onTap
+          ? (e: FederatedPointerEvent) => onTap(e.clientX, e.clientY)
+          : undefined
+      }
+    >
       <pixiGraphics draw={draw} />
       {name && (
         <StalkerPill

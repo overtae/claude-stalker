@@ -47,13 +47,13 @@ function IconPicker({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full px-2 py-1.5 bg-slate-900 border border-slate-700 rounded text-white text-xs font-mono hover:border-purple-500 focus:border-purple-500 focus:outline-none transition-colors flex items-center gap-2"
+        className="flex w-full items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-mono text-slate-700 outline-none transition-colors hover:border-slate-300 focus:border-claude-400"
       >
         <span className="text-base leading-none">{value || "\u{1F3E2}"}</span>
-        <span className="text-slate-500 text-[10px]">{"\u25BC"}</span>
+        <span className="text-[10px] text-slate-400">{"\u25BC"}</span>
       </button>
       {open && (
-        <div className="absolute z-50 top-full left-0 mt-1 p-2 bg-slate-800 border border-slate-600 rounded-lg shadow-xl grid grid-cols-5 gap-1 w-40">
+        <div className="absolute left-0 top-full z-50 mt-1 grid w-40 grid-cols-5 gap-1 rounded-xl border border-slate-200 bg-white p-2 shadow-xl">
           {FLOOR_ICONS.map((icon) => (
             <button
               key={icon}
@@ -62,8 +62,8 @@ function IconPicker({
                 onChange(icon);
                 setOpen(false);
               }}
-              className={`p-1.5 rounded text-base leading-none hover:bg-purple-500/20 transition-colors ${
-                value === icon ? "bg-purple-500/30 ring-1 ring-purple-500" : ""
+              className={`rounded-lg p-1.5 text-base leading-none transition-colors hover:bg-claude-50 ${
+                value === icon ? "bg-claude-100 ring-1 ring-claude-400" : ""
               }`}
             >
               {icon}
@@ -136,10 +136,16 @@ function formDataToFloorConfig(data: FloorFormData): {
 // BUILDING TAB COMPONENT
 // ============================================================================
 
+/** New floors default to the Claude accent. */
+const DEFAULT_FLOOR_ACCENT = "#d97757";
+
 export function BuildingTab({
   onDirtyChange,
+  detectedProjects = [],
 }: {
   onDirtyChange?: (dirty: boolean) => void;
+  /** Project folder names seen in sessions, offered as one-tap floors. */
+  detectedProjects?: string[];
 }): ReactNode {
   const buildingConfig = useNavigationStore((s) => s.buildingConfig);
   const updateBuildingConfig = useNavigationStore(
@@ -194,21 +200,34 @@ export function BuildingTab({
     onDirtyChange?.(dirty);
   }, [buildingName, floors, initialData, onDirtyChange]);
 
-  const handleAddFloor = () => {
+  const handleAddFloor = (project?: string) => {
     const nextFloorNumber =
       floors.length > 0 ? Math.max(...floors.map((f) => f.floorNumber)) + 1 : 1;
     setFloors((prev) => [
       ...prev,
       {
         id: generateId(),
-        name: "",
+        name: project ?? "",
         floorNumber: nextFloorNumber,
-        accent: "#6366f1",
+        accent: DEFAULT_FLOOR_ACCENT,
         icon: "\u{1F3E2}",
-        repos: "",
+        repos: project ?? "",
       },
     ]);
   };
+
+  // projects that no floor claims yet
+  const claimedRepos = new Set(
+    floors.flatMap((f) =>
+      f.repos
+        .split(",")
+        .map((r) => r.trim())
+        .filter(Boolean),
+    ),
+  );
+  const unclaimedProjects = detectedProjects.filter(
+    (p) => !claimedRepos.has(p),
+  );
 
   const handleRemoveFloor = (floorId: string) => {
     setFloors((prev) => prev.filter((f) => f.id !== floorId));
@@ -266,13 +285,13 @@ export function BuildingTab({
   return (
     <div className="space-y-6">
       {/* Hint */}
-      <p className="text-slate-500 text-xs">
+      <p className="text-xs text-slate-500">
         {t("settings.building.enableHint")}
       </p>
 
       {/* Building Name */}
       <div>
-        <label className="block text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">
+        <label className="mb-2 block text-xs font-semibold text-slate-500">
           {t("settings.building.name")}
         </label>
         <input
@@ -280,18 +299,18 @@ export function BuildingTab({
           value={buildingName}
           onChange={(e) => setBuildingName(e.target.value)}
           placeholder={t("settings.building.namePlaceholder")}
-          className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm font-mono focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 transition-colors"
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-colors focus:border-claude-400 focus:ring-2 focus:ring-claude-100"
         />
       </div>
 
       {/* Floors List */}
       <div>
-        <label className="block text-slate-400 text-xs font-bold uppercase tracking-wider mb-3">
+        <label className="mb-2 block text-xs font-semibold text-slate-500">
           {t("settings.building.floors")}
         </label>
 
         {floors.length === 0 ? (
-          <p className="text-slate-600 text-sm font-mono py-4 text-center border border-dashed border-slate-800 rounded-lg">
+          <p className="rounded-xl border border-dashed border-slate-200 py-4 text-center text-sm text-slate-400">
             {t("settings.building.noFloors")}
           </p>
         ) : (
@@ -299,17 +318,17 @@ export function BuildingTab({
             {floors.map((floor) => (
               <div
                 key={floor.id}
-                className="p-3 bg-slate-800/50 border border-slate-700 rounded-lg space-y-3"
+                className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-3"
               >
                 {/* Floor header */}
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono text-slate-500">
+                  <span className="text-xs font-mono text-slate-400">
                     {t("settings.building.floorNumber")} {floor.floorNumber}
                   </span>
                   <button
                     type="button"
                     onClick={() => handleRemoveFloor(floor.id)}
-                    className="text-xs text-rose-500/70 hover:text-rose-400 font-mono transition-colors"
+                    className="text-xs text-rose-500 transition-colors hover:text-rose-600"
                   >
                     {t("settings.building.deleteFloor")}
                   </button>
@@ -319,7 +338,7 @@ export function BuildingTab({
                 <div className="grid grid-cols-2 gap-3">
                   {/* Name */}
                   <div>
-                    <label className="block text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">
+                    <label className="mb-1 block text-[11px] font-medium text-slate-500">
                       {t("settings.building.floorName")}
                     </label>
                     <input
@@ -329,13 +348,13 @@ export function BuildingTab({
                         handleUpdateFloor(floor.id, { name: e.target.value })
                       }
                       placeholder="Engineering"
-                      className="w-full px-2 py-1.5 bg-slate-900 border border-slate-700 rounded text-white text-xs font-mono focus:border-purple-500 focus:outline-none transition-colors"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-mono text-slate-700 outline-none transition-colors focus:border-claude-400 focus:ring-2 focus:ring-claude-100"
                     />
                   </div>
 
                   {/* Icon */}
                   <div>
-                    <label className="block text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">
+                    <label className="mb-1 block text-[11px] font-medium text-slate-500">
                       {t("settings.building.icon")}
                     </label>
                     <IconPicker
@@ -346,7 +365,7 @@ export function BuildingTab({
 
                   {/* Accent color */}
                   <div>
-                    <label className="block text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">
+                    <label className="mb-1 block text-[11px] font-medium text-slate-500">
                       {t("settings.building.accentColor")}
                     </label>
                     <div className="flex items-center gap-2">
@@ -358,9 +377,9 @@ export function BuildingTab({
                             accent: e.target.value,
                           })
                         }
-                        className="w-8 h-8 border border-slate-700 rounded cursor-pointer bg-transparent"
+                        className="h-8 w-8 cursor-pointer rounded-lg border border-slate-200 bg-transparent"
                       />
-                      <span className="text-xs font-mono text-slate-500">
+                      <span className="text-xs font-mono text-slate-400">
                         {floor.accent}
                       </span>
                     </div>
@@ -368,7 +387,7 @@ export function BuildingTab({
 
                   {/* Repos */}
                   <div className="col-span-2">
-                    <label className="block text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">
+                    <label className="mb-1 block text-[11px] font-medium text-slate-500">
                       {t("settings.building.repos")}
                     </label>
                     <input
@@ -378,7 +397,7 @@ export function BuildingTab({
                         handleUpdateFloor(floor.id, { repos: e.target.value })
                       }
                       placeholder={t("settings.building.reposPlaceholder")}
-                      className="w-full px-2 py-1.5 bg-slate-900 border border-slate-700 rounded text-white text-xs font-mono focus:border-purple-500 focus:outline-none transition-colors"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-mono text-slate-700 outline-none transition-colors focus:border-claude-400 focus:ring-2 focus:ring-claude-100"
                     />
                   </div>
                 </div>
@@ -390,30 +409,51 @@ export function BuildingTab({
         {/* Add Floor button */}
         <button
           type="button"
-          onClick={handleAddFloor}
-          className="mt-3 w-full py-2 border border-dashed border-slate-700 rounded-lg text-sm text-slate-500 hover:text-slate-300 hover:border-slate-600 font-mono transition-colors"
+          onClick={() => handleAddFloor()}
+          className="mt-3 w-full rounded-xl border border-dashed border-slate-300 py-2 text-sm text-slate-500 transition-colors hover:border-claude-300 hover:bg-claude-50 hover:text-claude-700"
         >
           + {t("settings.building.addFloor")}
         </button>
       </div>
 
-      {/* Save button */}
-      <div className="pt-4 border-t border-slate-800 space-y-2">
-        {saveError && (
-          <p className="text-xs font-mono text-rose-400 text-center">
-            {saveError}
+      {unclaimedProjects.length > 0 && (
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-slate-500">
+            {t("settings.building.detected")}
+          </label>
+          <p className="mb-2 text-[11px] text-slate-400">
+            {t("settings.building.detectedHint")}
           </p>
+          <div className="flex flex-wrap gap-1.5">
+            {unclaimedProjects.map((project) => (
+              <button
+                key={project}
+                type="button"
+                onClick={() => handleAddFloor(project)}
+                className="rounded-full border border-slate-200 bg-white px-3 py-1 font-mono text-xs text-slate-600 transition-colors hover:border-claude-300 hover:bg-claude-50 hover:text-claude-700"
+              >
+                + {project}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Save button */}
+      <div className="space-y-2 border-t border-slate-100 pt-4">
+        {saveError && (
+          <p className="text-center text-xs text-rose-500">{saveError}</p>
         )}
         <button
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className={`w-full py-2.5 rounded-lg text-sm font-bold transition-colors ${
+          className={`w-full rounded-xl py-2.5 text-sm font-bold transition-colors ${
             saved
-              ? "bg-emerald-500/20 border border-emerald-500/50 text-emerald-400"
+              ? "bg-emerald-50 text-emerald-700"
               : saving
-                ? "bg-slate-700 border border-slate-600 text-slate-400 cursor-not-allowed"
-                : "bg-purple-500/20 border border-purple-500/50 text-purple-300 hover:bg-purple-500/30"
+                ? "cursor-not-allowed bg-slate-100 text-slate-400"
+                : "bg-claude-500 text-white hover:bg-claude-600"
           }`}
         >
           {saved

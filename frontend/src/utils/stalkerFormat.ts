@@ -1,5 +1,7 @@
 import type { Session } from "@/hooks/useSessions";
 import type { TranslationKey } from "@/i18n";
+import type { BuildingConfig } from "@/types/navigation";
+import { sessionMatchesFloor } from "@/components/command/sessionMatchesFloor";
 
 type Translate = (
   key: TranslationKey,
@@ -92,38 +94,76 @@ export interface OfficeFloor {
   floor: number;
   name: string;
   sessions: Session[];
-  lastUpdated: string;
+  /** Most recent session update; null for a configured floor with no sessions. */
+  lastUpdated: string | null;
+  /** True when the floor comes from the building settings. */
+  isConfigured: boolean;
+  icon?: string;
+  accent?: string;
+}
+
+function newestFirst(list: Session[]): Session[] {
+  return [...list].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
 /**
- * Each project is one floor. Floor numbers follow when the project first
- * appeared (oldest = 1F) so they stay put as sessions come and go.
+ * Floors = building-settings floors (matched by project folder name) plus one
+ * auto floor per remaining project. Auto floors are numbered above the
+ * configured ones in the order the project first appeared, so numbers stay
+ * put as sessions come and go.
  */
-export function buildFloors(t: Translate, sessions: Session[]): OfficeFloor[] {
+export function buildFloors(
+  t: Translate,
+  sessions: Session[],
+  config: BuildingConfig | null = null,
+): OfficeFloor[] {
+  const configured = (config?.floors ?? []).map((cfg) => {
+    const matched = newestFirst(
+      sessions.filter((s) => sessionMatchesFloor(s, cfg)),
+    );
+    return {
+      key: `floor:${cfg.id}`,
+      floor: cfg.floorNumber,
+      name: cfg.name,
+      icon: cfg.icon,
+      accent: cfg.accent,
+      isConfigured: true,
+      sessions: matched,
+      lastUpdated: matched[0]?.updatedAt ?? null,
+    };
+  });
+  const claimed = new Set(
+    configured.flatMap((f) => f.sessions.map((s) => s.id)),
+  );
+
   const groups = new Map<string, Session[]>();
   for (const session of sessions) {
+    if (claimed.has(session.id)) {
+      continue;
+    }
     const key = projectKey(session);
     groups.set(key, [...(groups.get(key) ?? []), session]);
   }
 
-  const byAge = [...groups.entries()]
-    .map(([key, list]) => {
-      const sorted = [...list].sort((a, b) =>
-        b.updatedAt.localeCompare(a.updatedAt),
-      );
-      const firstSeen = list.reduce(
+  const firstAuto = Math.max(0, ...configured.map((f) => f.floor)) + 1;
+  const auto = [...groups.entries()]
+    .map(([key, list]) => ({
+      key,
+      sorted: newestFirst(list),
+      firstSeen: list.reduce(
         (min, s) => (s.createdAt < min ? s.createdAt : min),
         list[0].createdAt,
-      );
-      return { key, sorted, firstSeen };
-    })
-    .sort((a, b) => a.firstSeen.localeCompare(b.firstSeen));
+      ),
+    }))
+    .sort((a, b) => a.firstSeen.localeCompare(b.firstSeen))
+    .map(({ key, sorted }, i) => ({
+      key,
+      floor: firstAuto + i,
+      name: projectName(t, sorted[0]),
+      isConfigured: false,
+      sessions: sorted,
+      lastUpdated: sorted[0].updatedAt,
+    }));
 
-  return byAge.map(({ key, sorted }, i) => ({
-    key,
-    floor: i + 1,
-    name: projectName(t, sorted[0]),
-    sessions: sorted,
-    lastUpdated: sorted[0].updatedAt,
-  }));
+  return [...configured, ...auto];
 }

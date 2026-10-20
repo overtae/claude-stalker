@@ -11,6 +11,7 @@ import {
 import { useAttentionStore } from "@/stores/attentionStore";
 import { useGameStore } from "@/stores/gameStore";
 import { useTranslation } from "@/hooks/useTranslation";
+import { STALKER_HIDE_LEGACY_OFFICE } from "@/constants/stalkerView";
 
 /** Simple character-by-character fuzzy match. */
 function fuzzyMatch(query: string, text: string): boolean {
@@ -23,14 +24,21 @@ function fuzzyMatch(query: string, text: string): boolean {
   return qi === q.length;
 }
 
-interface CommandEntry {
+export interface CommandEntry {
   id: string;
   label: string;
   icon: string;
   action: () => void;
 }
 
-export default function CommandBar(): ReactNode {
+interface CommandBarProps {
+  /** Screen-specific commands (e.g. jump to a floor/session) listed first. */
+  extraCommands?: CommandEntry[];
+}
+
+export default function CommandBar({
+  extraCommands = [],
+}: CommandBarProps = {}): ReactNode {
   const isOpen = useAttentionStore((s) => s.isCommandBarOpen);
   const filter = useAttentionStore((s) => s.commandFilter);
   const closeCommandBar = useAttentionStore((s) => s.closeCommandBar);
@@ -48,7 +56,13 @@ export default function CommandBar(): ReactNode {
 
   // Build command list
   const commands: CommandEntry[] = useMemo(() => {
-    const cmds: CommandEntry[] = [];
+    const cmds: CommandEntry[] = extraCommands.map((cmd) => ({
+      ...cmd,
+      action: () => {
+        cmd.action();
+        closeCommandBar();
+      },
+    }));
 
     // Per-agent focus commands
     agents.forEach((agent) => {
@@ -89,6 +103,10 @@ export default function CommandBar(): ReactNode {
       },
     });
 
+    // Debug overlays only exist in the legacy pixel office.
+    if (STALKER_HIDE_LEGACY_OFFICE) {
+      return cmds;
+    }
     cmds.push({
       id: "toggle-debug",
       label: t("attention.commandBar.toggleDebug"),
@@ -141,6 +159,7 @@ export default function CommandBar(): ReactNode {
 
     return cmds;
   }, [
+    extraCommands,
     agents,
     t,
     closeCommandBar,
@@ -197,13 +216,13 @@ export default function CommandBar(): ReactNode {
       }}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" />
+      <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-[2px]" />
 
       {/* Command palette */}
-      <div className="relative w-full max-w-lg bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xl shadow-slate-900/10">
         {/* Search input */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-800">
-          <span className="text-neutral-500">{"\uD83D\uDD0D"}</span>
+        <div className="flex items-center gap-3 border-b border-slate-100 px-4 py-3">
+          <span className="text-slate-400">{"\uD83D\uDD0D"}</span>
           <input
             ref={inputRef}
             type="text"
@@ -214,17 +233,17 @@ export default function CommandBar(): ReactNode {
             }}
             onKeyDown={handleKeyDown}
             placeholder={t("attention.commandBar.placeholder")}
-            className="flex-1 bg-transparent text-neutral-200 placeholder-neutral-600 outline-none text-sm font-mono"
+            className="flex-1 bg-transparent text-sm text-slate-800 placeholder-slate-400 outline-none"
           />
-          <kbd className="text-[10px] text-neutral-600 border border-neutral-700 rounded px-1.5 py-0.5">
+          <kbd className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] text-slate-500">
             ESC
           </kbd>
         </div>
 
         {/* Command list */}
-        <div className="max-h-64 overflow-y-auto py-1">
+        <div className="max-h-80 overflow-y-auto py-1">
           {filtered.length === 0 ? (
-            <div className="px-4 py-6 text-center text-neutral-600 text-sm">
+            <div className="px-4 py-6 text-center text-sm text-slate-400">
               {t("attention.commandBar.noResults")}
             </div>
           ) : (
@@ -234,12 +253,12 @@ export default function CommandBar(): ReactNode {
                 onClick={cmd.action}
                 className={`w-full flex items-center gap-3 px-4 py-2 text-left text-sm transition-colors ${
                   i === selectedIndex
-                    ? "bg-purple-500/20 text-purple-300"
-                    : "text-neutral-400 hover:bg-neutral-800"
+                    ? "bg-claude-50 text-claude-700"
+                    : "text-slate-600 hover:bg-slate-50"
                 }`}
               >
                 <span className="text-base">{cmd.icon}</span>
-                <span className="font-mono">{cmd.label}</span>
+                <span className="truncate">{cmd.label}</span>
               </button>
             ))
           )}

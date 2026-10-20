@@ -12,7 +12,10 @@ interface StalkerMapHeaderProps {
 }
 
 /** Floating project card (top-left) and connection pill (top-right) over the map. */
-export function StalkerMapHeader({ floor, session }: StalkerMapHeaderProps): ReactNode {
+export function StalkerMapHeader({
+  floor,
+  session,
+}: StalkerMapHeaderProps): ReactNode {
   const { t } = useTranslation();
   const isConnected = useGameStore(selectIsConnected);
   const zoneLabel = useGameStore((s) => s.activityZoneLabel);
@@ -32,12 +35,17 @@ export function StalkerMapHeader({ floor, session }: StalkerMapHeaderProps): Rea
               <span className="rounded-md bg-slate-800 px-1.5 py-0.5 text-[10px] font-extrabold text-white">
                 {floor.floor}F
               </span>
-              <span className="truncate text-sm font-bold text-slate-800">{floor.name}</span>
+              <span className="truncate text-sm font-bold text-slate-800">
+                {floor.name}
+              </span>
             </div>
             <p className="truncate text-xs text-slate-500">
               {session ? sessionTitle(t, session) : "—"}
               {zoneLabel && (
-                <span className="font-semibold text-teal-600"> · {t("stalker.nowIn", { zone: zoneLabel })}</span>
+                <span className="font-semibold text-claude-600">
+                  {" "}
+                  · {t("stalker.nowIn", { zone: zoneLabel })}
+                </span>
               )}
             </p>
           </div>
@@ -45,14 +53,20 @@ export function StalkerMapHeader({ floor, session }: StalkerMapHeaderProps): Rea
       )}
       <span
         className={`pointer-events-none absolute right-4 top-4 z-20 flex items-center gap-1.5 rounded-full border bg-white/95 px-3 py-1.5 text-xs font-extrabold shadow-sm backdrop-blur ${
-          isConnected ? "border-teal-200 text-teal-700" : "border-slate-200 text-slate-500"
+          isConnected
+            ? "border-emerald-200 text-emerald-700"
+            : "border-slate-200 text-slate-500"
         }`}
       >
         <span
-          className={`h-2 w-2 rounded-full ${isConnected ? "animate-pulse bg-teal-500" : "bg-slate-300"}`}
+          className={`h-2 w-2 rounded-full ${isConnected ? "animate-pulse bg-emerald-500" : "bg-slate-300"}`}
           aria-hidden
         />
-        {isConnected ? t("stalker.live") : t("stalker.disconnected")}
+        {isConnected
+          ? t("stalker.live")
+          : session
+            ? t("stalker.disconnected")
+            : t("stalker.waiting")}
       </span>
     </>
   );

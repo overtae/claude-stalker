@@ -4,203 +4,117 @@
 
 "use client";
 
-import { useEffect, useCallback } from "react";
-import { X } from "lucide-react";
+import type { ReactNode } from "react";
 import { format } from "date-fns";
 import type { EventLogEntry } from "@/stores/gameStore";
 import { useTranslation } from "@/hooks/useTranslation";
-import { getEventTypeBadgeClasses } from "@/utils/event-type-styles";
+import { usePreferencesStore } from "@/stores/preferencesStore";
+import type { TranslationKey } from "@/i18n";
+import Modal from "@/components/overlay/Modal";
 
 interface EventDetailModalProps {
   event: EventLogEntry;
   onClose: () => void;
 }
 
+/** Events from the main Claude session carry this agent id. */
+const MAIN_AGENT_ID = "main";
+
+const TIME_FORMAT = { ko: "yyyy. M. d. a h:mm:ss", en: "MMM d, HH:mm:ss" } as const;
+
+/** Text fields shown as labelled blocks, in display order. */
+const TEXT_FIELDS: { key: "toolName" | "agentName" | "taskDescription" | "prompt" | "thinking" | "message" | "resultSummary" | "errorType"; label: TranslationKey; tone?: string; mono?: boolean }[] = [
+  { key: "toolName", label: "eventDetail.tool", mono: true },
+  { key: "agentName", label: "eventDetail.agentName" },
+  { key: "taskDescription", label: "eventDetail.taskDescription" },
+  { key: "prompt", label: "eventDetail.userPrompt", tone: "bg-claude-50 border-claude-100 text-slate-800" },
+  { key: "thinking", label: "eventDetail.thinking", tone: "bg-slate-50 border-slate-100 italic text-slate-500" },
+  { key: "message", label: "eventDetail.message" },
+  { key: "resultSummary", label: "eventDetail.resultSummary" },
+  { key: "errorType", label: "eventDetail.errorType", tone: "bg-rose-50 border-rose-100 text-rose-700" },
+];
+
+function Field({ label, children }: { label: string; children: ReactNode }): ReactNode {
+  return (
+    <section>
+      <h3 className="mb-1 text-[11px] font-semibold text-slate-400">{label}</h3>
+      {children}
+    </section>
+  );
+}
+
 export function EventDetailModal({ event, onClose }: EventDetailModalProps) {
   const { t } = useTranslation();
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    },
-    [onClose],
-  );
-
-  useEffect(() => {
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [handleKeyDown]);
-
+  const language = usePreferencesStore((s) => s.language);
   const detail = event.detail ?? {};
-  const hasDetail = Object.keys(detail).length > 0;
+  const fields = TEXT_FIELDS.filter(({ key }) => detail[key]);
+  const hasDetail = fields.length > 0 || !!detail.toolInput;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* Modal Panel */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={`${event.type.replace(/_/g, " ")} — ${event.summary}`}
-        className="relative z-10 w-full max-w-2xl max-h-[80vh] flex flex-col bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden font-mono text-xs"
-      >
-        {/* Header */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-700 bg-slate-950 flex-shrink-0">
-          <span
-            className={`px-2 py-0.5 rounded border text-[10px] font-bold uppercase tracking-wider ${getEventTypeBadgeClasses(event.type)}`}
-          >
-            {event.type.replace(/_/g, " ")}
-          </span>
-          <span className="text-slate-400 text-[11px]">
-            {format(event.timestamp, "HH:mm:ss.SSS")}
-          </span>
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      size="lg"
+      title={t(`eventType.${event.type}` as TranslationKey)}
+      titleAdornment={
+        <span className="rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-slate-500">
+          {event.type}
+        </span>
+      }
+      footer={
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-xl bg-claude-500 px-4 py-1.5 text-xs font-bold text-white transition-colors hover:bg-claude-600"
+        >
+          {t("modal.close")}
+        </button>
+      }
+    >
+      <div className="space-y-4">
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 rounded-2xl bg-slate-50 px-4 py-3 text-xs">
+          <dt className="text-slate-400">{t("eventDetail.time")}</dt>
+          <dd className="tabular-nums text-slate-700">{format(event.timestamp, TIME_FORMAT[language])}</dd>
           {event.agentId && (
-            <span className="text-blue-400 text-[10px] font-mono">
-              @{event.agentId}
-            </span>
-          )}
-          <button
-            onClick={onClose}
-            className="ml-auto p-1.5 text-slate-500 hover:text-white hover:bg-slate-700 rounded transition-colors"
-            aria-label={t("modal.close")}
-          >
-            <X size={14} />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="flex-grow overflow-y-auto p-4 space-y-3">
-          {/* Summary */}
-          <div>
-            <div className="text-slate-500 text-[10px] uppercase tracking-widest mb-1">
-              {t("eventDetail.summary")}
-            </div>
-            <div className="text-slate-200 text-[12px]">{event.summary}</div>
-          </div>
-
-          {/* Detail fields */}
-          {hasDetail ? (
             <>
-              {detail.toolName && (
-                <div>
-                  <div className="text-slate-500 text-[10px] uppercase tracking-widest mb-1">
-                    {t("eventDetail.tool")}
-                  </div>
-                  <div className="text-amber-300 text-[12px]">
-                    {String(detail.toolName)}
-                  </div>
-                </div>
-              )}
-
-              {detail.agentName && (
-                <div>
-                  <div className="text-slate-500 text-[10px] uppercase tracking-widest mb-1">
-                    {t("eventDetail.agentName")}
-                  </div>
-                  <div className="text-blue-300 text-[12px]">
-                    {String(detail.agentName)}
-                  </div>
-                </div>
-              )}
-
-              {detail.taskDescription && (
-                <div>
-                  <div className="text-slate-500 text-[10px] uppercase tracking-widest mb-1">
-                    {t("eventDetail.taskDescription")}
-                  </div>
-                  <div className="text-slate-200 text-[12px] whitespace-pre-wrap leading-relaxed">
-                    {String(detail.taskDescription)}
-                  </div>
-                </div>
-              )}
-
-              {detail.prompt && (
-                <div>
-                  <div className="text-slate-500 text-[10px] uppercase tracking-widest mb-1">
-                    {t("eventDetail.userPrompt")}
-                  </div>
-                  <div className="text-cyan-200 text-[12px] whitespace-pre-wrap leading-relaxed bg-slate-800/50 rounded p-2 border border-slate-700">
-                    {String(detail.prompt)}
-                  </div>
-                </div>
-              )}
-
-              {detail.thinking && (
-                <div>
-                  <div className="text-slate-500 text-[10px] uppercase tracking-widest mb-1">
-                    {t("eventDetail.thinking")}
-                  </div>
-                  <div className="text-slate-400 italic text-[12px] whitespace-pre-wrap leading-relaxed bg-slate-800/30 rounded p-2 border border-slate-700/50">
-                    {String(detail.thinking)}
-                  </div>
-                </div>
-              )}
-
-              {detail.message && (
-                <div>
-                  <div className="text-slate-500 text-[10px] uppercase tracking-widest mb-1">
-                    {t("eventDetail.message")}
-                  </div>
-                  <div className="text-slate-200 text-[12px] whitespace-pre-wrap leading-relaxed">
-                    {String(detail.message)}
-                  </div>
-                </div>
-              )}
-
-              {detail.resultSummary && (
-                <div>
-                  <div className="text-slate-500 text-[10px] uppercase tracking-widest mb-1">
-                    {t("eventDetail.resultSummary")}
-                  </div>
-                  <div className="text-emerald-300 text-[12px] whitespace-pre-wrap leading-relaxed">
-                    {String(detail.resultSummary)}
-                  </div>
-                </div>
-              )}
-
-              {detail.errorType && (
-                <div>
-                  <div className="text-slate-500 text-[10px] uppercase tracking-widest mb-1">
-                    {t("eventDetail.errorType")}
-                  </div>
-                  <div className="text-red-400 text-[12px]">
-                    {String(detail.errorType)}
-                  </div>
-                </div>
-              )}
-
-              {detail.toolInput && (
-                <div>
-                  <div className="text-slate-500 text-[10px] uppercase tracking-widest mb-1">
-                    {t("eventDetail.toolInput")}
-                  </div>
-                  <pre className="text-slate-300 text-[11px] bg-slate-800 rounded p-3 border border-slate-700 overflow-x-auto whitespace-pre-wrap break-words leading-relaxed">
-                    {JSON.stringify(detail.toolInput, null, 2)}
-                  </pre>
-                </div>
-              )}
+              <dt className="text-slate-400">{t("eventDetail.actor")}</dt>
+              <dd className="truncate text-slate-700">
+                {event.agentId === MAIN_AGENT_ID ? t("stalker.claude") : (
+                  <span className="font-mono">{event.agentId}</span>
+                )}
+              </dd>
             </>
-          ) : (
-            <div className="text-slate-600 italic text-center py-4">
-              {t("eventDetail.noDetail")}
-            </div>
           )}
-        </div>
+        </dl>
 
-        {/* Footer */}
-        <div className="flex-shrink-0 px-4 py-3 border-t border-slate-700 bg-slate-950 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-4 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold rounded transition-colors"
-          >
-            {t("modal.close")}
-          </button>
-        </div>
+        <Field label={t("eventDetail.summary")}>
+          <p className="text-sm text-slate-800">{event.summary}</p>
+        </Field>
+
+        {fields.map(({ key, label, tone, mono }) => (
+          <Field key={key} label={t(label)}>
+            <p
+              className={`whitespace-pre-wrap break-words text-[13px] leading-relaxed ${
+                tone ? `rounded-xl border px-3 py-2 ${tone}` : "text-slate-700"
+              } ${mono ? "font-mono" : ""}`}
+            >
+              {String(detail[key])}
+            </p>
+          </Field>
+        ))}
+
+        {detail.toolInput && (
+          <Field label={t("eventDetail.toolInput")}>
+            <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-xl border border-slate-100 bg-slate-50 p-3 font-mono text-[11px] leading-relaxed text-slate-600">
+              {JSON.stringify(detail.toolInput, null, 2)}
+            </pre>
+          </Field>
+        )}
+
+        {!hasDetail && (
+          <p className="py-2 text-center text-xs text-slate-400">{t("eventDetail.noDetail")}</p>
+        )}
       </div>
-    </div>
+    </Modal>
   );
 }

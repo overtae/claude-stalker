@@ -55,6 +55,14 @@ const DEFAULT_CLOCK_TYPE: ClockType = "analog";
 const DEFAULT_CLOCK_FORMAT: ClockFormat = "12h";
 const DEFAULT_AUTO_FOLLOW_NEW_SESSIONS = true;
 const DEFAULT_LANGUAGE: Locale = "en";
+
+/** First-run language: follow the browser (Korean if it says so), else English. */
+function browserLanguage(): Locale {
+  if (typeof navigator === "undefined") {
+    return DEFAULT_LANGUAGE;
+  }
+  return navigator.language?.toLowerCase().startsWith("ko") ? "ko" : "en";
+}
 const DEFAULT_COMMAND_BAR_ENABLED = true;
 const DEFAULT_CLICK_TO_FOCUS_ENABLED = false;
 const DEFAULT_TOAST_FILTER_PERMISSION = true;
@@ -121,7 +129,7 @@ export const usePreferencesStore = create<PreferencesState>()((set, get) => ({
       autoFollowRaw === undefined
         ? DEFAULT_AUTO_FOLLOW_NEW_SESSIONS
         : autoFollowRaw === "true";
-    const language = prefs.language || DEFAULT_LANGUAGE;
+    const language = prefs.language || browserLanguage();
 
     set({
       clockType:
