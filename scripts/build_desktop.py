@@ -153,6 +153,7 @@ def package_mac(app: Path, ver: str) -> Path:
     staging.mkdir()
     shutil.copytree(app, staging / app.name, symlinks=True)
     (staging / "Applications").symlink_to("/Applications")
+    (staging / "처음 열 때 읽어주세요.txt").write_text(FIRST_OPEN_MAC, encoding="utf-8")
     OUT.mkdir(parents=True, exist_ok=True)
     dmg = OUT / f"ClaudeStalker-{ver}-macos-{platform.machine()}.dmg"
     dmg.unlink(missing_ok=True)
@@ -162,6 +163,26 @@ def package_mac(app: Path, ver: str) -> Path:
         check=True,
     )  # fmt: skip
     return dmg
+
+
+#: The app isn't notarized (no Apple Developer ID), so Gatekeeper blocks the
+#: first open of a downloaded copy. This rides along in the .dmg.
+FIRST_OPEN_MAC = """Claude Stalker 설치 / Install
+
+1. Claude Stalker 앱을 Applications 폴더로 끌어다 놓으세요.
+2. 처음 열면 "Apple에서 악성 코드가 없는지 확인할 수 없습니다"가 뜰 수 있어요.
+   개발자 서명(유료)이 없는 앱이라 그래요. [완료]를 누른 뒤:
+   시스템 설정 > 개인정보 보호 및 보안 > 아래쪽 "그래도 열기" 를 누르세요. (한 번만)
+   또는 터미널에서:
+     xattr -dr com.apple.quarantine "/Applications/Claude Stalker.app"
+3. 메뉴바의 주황색 건물 아이콘이 Claude Stalker예요. 처음 실행 후 Claude Code를 한 번 재시작하세요.
+
+---
+1. Drag Claude Stalker into Applications.
+2. If macOS says it can't check the app for malware (it isn't notarized), click Done, then
+   System Settings > Privacy & Security > "Open Anyway" (once), or run the xattr line above.
+3. Look for the orange building in the menu bar. Restart Claude Code once after the first launch.
+"""
 
 
 def find_iscc() -> str | None:
@@ -196,7 +217,16 @@ def package_windows(app: Path, hook: Path, icon: Path, ver: str) -> list[Path]:
     return outputs
 
 
+def _utf8_console() -> None:
+    """Windows consoles default to cp1252, which can't print ▸/✓ (or Korean)."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8", errors="replace")
+
+
 def main() -> None:
+    _utf8_console()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--skip-frontend", action="store_true", help="reuse frontend/out")
     args = parser.parse_args()

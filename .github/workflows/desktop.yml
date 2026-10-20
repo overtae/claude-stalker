@@ -24,6 +24,9 @@ jobs:
     defaults:
       run:
         shell: bash
+    env:
+      # UTF-8 for every Python process (Windows runners default to cp1252)
+      PYTHONUTF8: "1"
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
