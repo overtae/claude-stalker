@@ -16,6 +16,8 @@ fmt:
 	uv run ruff format .
 
 typecheck:
-	uv run pyright .
+	# Respect pyrightconfig.json include (app/ only). `pyright .` also typechecks
+	# packaging/, which pulls pystray/Pillow/hooks only at desktop build time.
+	uv run pyright
 
 checkall: fmt lint typecheck test

@@ -72,6 +72,10 @@ typeCheckingMode = "strict"
 include = [
     "app",
 ]
+exclude = [
+    "packaging",
+    "tests",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

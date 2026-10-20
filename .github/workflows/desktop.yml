@@ -34,6 +34,9 @@ jobs:
       - name: Install frontend dependencies
         run: cd frontend && bun install --frozen-lockfile
 
+      - name: Sync backend lockfile
+        run: cd backend && uv sync --frozen
+
       - name: Install Inno Setup (Windows installer)
         if: runner.os == 'Windows'
         run: |

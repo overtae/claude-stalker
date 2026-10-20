@@ -2,6 +2,10 @@
   "include": [
     "app"
   ],
+  "exclude": [
+    "packaging",
+    "tests"
+  ],
   "pythonVersion": "3.13",
   "typeCheckingMode": "strict",
   "useLibraryCodeForTypes": true
