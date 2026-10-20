@@ -251,6 +251,7 @@ Preferences are stored as key-value pairs and persist across sessions. Current p
 - `clock_format`: `"12h"` or `"24h"` (for digital clock)
 - `auto_follow_new_sessions`: `"true"` or `"false"` (auto-follow new sessions in current project)
 - `language`: `"en"`, `"es"`, or `"pt-BR"` (UI language)
+- `ui_theme`: `"light"` or `"dark"` (Stalker shell appearance)
 
 ### WebSocket
 

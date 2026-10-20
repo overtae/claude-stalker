@@ -12,13 +12,15 @@ import {
 import { usePreferencesStore } from "@/stores/preferencesStore";
 import { EventDetailModal } from "@/components/game/EventDetailModal";
 import { useTranslation } from "@/hooks/useTranslation";
-import { CLAUDE_COLOR, agentColor, toCssColor } from "@/utils/stalkerFormat";
+import { useMainAgent } from "@/hooks/useMainAgent";
+import { agentColor, toCssColor } from "@/utils/stalkerFormat";
 
 const TIME_FORMAT = { ko: "H시 mm분 ss초", en: "HH:mm:ss" } as const;
 
 /** Activity tab body: event timeline (newest first). */
 export function StalkerActivityList(): ReactNode {
   const { t } = useTranslation();
+  const mainAgent = useMainAgent();
   const language = usePreferencesStore((s) => s.language);
   const eventLog = useGameStore(selectEventLog);
   const agents = useGameStore(useShallow(selectAgents));
@@ -32,7 +34,7 @@ export function StalkerActivityList(): ReactNode {
         color: agentColor(agent.number),
       };
     }
-    return { name: t("stalker.claude"), color: CLAUDE_COLOR };
+    return { name: mainAgent.name, color: mainAgent.color };
   };
 
   return (
@@ -50,7 +52,7 @@ export function StalkerActivityList(): ReactNode {
                 <button
                   type="button"
                   onClick={() => setSelected(event)}
-                  className="grid w-full grid-cols-[4.75rem_10px_1fr] items-start gap-2 rounded-lg px-1 py-1.5 text-left hover:bg-slate-50"
+                  className="grid w-full cursor-pointer grid-cols-[4.75rem_10px_1fr] items-start gap-2 rounded-lg px-1 py-1.5 text-left hover:bg-slate-50 dark:hover:bg-neutral-800/80"
                 >
                   <span className="pt-0.5 text-[10px] tabular-nums text-slate-400">
                     {format(event.timestamp, TIME_FORMAT[language])}
@@ -61,10 +63,10 @@ export function StalkerActivityList(): ReactNode {
                     aria-hidden
                   />
                   <span className="min-w-0">
-                    <span className="block truncate text-xs font-bold text-slate-700">
+                    <span className="block truncate text-xs font-bold text-slate-700 dark:text-neutral-200">
                       {who.name}
                     </span>
-                    <span className="line-clamp-2 text-[11px] leading-snug text-slate-500">
+                    <span className="line-clamp-2 text-[11px] leading-snug text-slate-500 dark:text-neutral-400">
                       {event.summary}
                     </span>
                   </span>

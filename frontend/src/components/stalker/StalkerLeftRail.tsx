@@ -4,6 +4,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { Building2, Pin, RefreshCw } from "lucide-react";
 import type { Session } from "@/hooks/useSessions";
 import { useTranslation } from "@/hooks/useTranslation";
+import { StalkerAgentChip } from "@/components/stalker/StalkerAgentChip";
 import {
   usePreferencesStore,
   selectAutoFollowNewSessions,
@@ -78,7 +79,7 @@ export function StalkerLeftRail({
   return (
     <aside className="hidden h-full w-60 shrink-0 flex-col md:flex">
       <div className="flex items-center justify-between px-1 pb-2 pt-1">
-        <h2 className="flex items-center gap-1.5 text-sm font-bold text-slate-800">
+        <h2 className="flex items-center gap-1.5 text-sm font-bold text-slate-800 dark:text-neutral-100">
           <Building2 size={16} className="text-slate-500" aria-hidden />
           {t("stalker.floorGuide")}
         </h2>
@@ -124,7 +125,7 @@ export function StalkerLeftRail({
           <button
             type="button"
             onClick={() => setShowIdle((v) => !v)}
-            className="w-full rounded-lg py-2 text-center text-xs font-medium text-slate-500 hover:bg-white/70 hover:text-slate-700"
+            className="w-full cursor-pointer rounded-lg py-2 text-center text-xs font-medium text-slate-500 hover:bg-white/70 hover:text-slate-700 dark:text-neutral-400 dark:hover:bg-neutral-800/70 dark:hover:text-neutral-200"
           >
             {showIdle
               ? t("stalker.fewerFloors")
@@ -159,7 +160,9 @@ function FloorHeader({
     <div className="flex items-center gap-3">
       <span
         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-extrabold ${
-          isActive ? "text-white" : "bg-slate-100 text-slate-500"
+          isActive
+            ? "text-white"
+            : "bg-slate-100 text-slate-500 dark:bg-neutral-800 dark:text-neutral-400"
         }`}
         // a floor's accent from the building settings colours its active badge
         style={isActive ? { background: floor.accent ?? "#1e293b" } : undefined}
@@ -167,7 +170,7 @@ function FloorHeader({
         {floor.floor}F
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-bold text-slate-800">
+        <span className="block truncate text-sm font-bold text-slate-800 dark:text-neutral-100">
           {floor.icon && (
             <span className="mr-1" aria-hidden>
               {floor.icon}
@@ -175,7 +178,7 @@ function FloorHeader({
           )}
           {floor.name}
         </span>
-        <span className="block truncate text-[11px] text-slate-500">
+        <span className="block truncate text-[11px] text-slate-500 dark:text-neutral-400">
           {floor.sessions.length === 0
             ? t("stalker.floorEmpty")
             : `${t("stalker.floorSessions", { count: floor.sessions.length })} · ${when}`}
@@ -204,7 +207,7 @@ function FloorCard({
       type="button"
       onClick={onSelect}
       disabled={!onSelect}
-      className="w-full rounded-2xl border border-slate-200/70 bg-white px-3 py-2.5 text-left shadow-sm transition enabled:hover:-translate-y-px enabled:hover:border-slate-300 enabled:hover:shadow disabled:cursor-default disabled:opacity-70"
+      className="w-full rounded-2xl border border-slate-200/70 bg-white px-3 py-2.5 text-left shadow-sm transition enabled:cursor-pointer enabled:hover:-translate-y-px enabled:hover:border-slate-300 enabled:hover:shadow disabled:cursor-default disabled:opacity-70 dark:border-neutral-700/70 dark:bg-neutral-900 dark:enabled:hover:border-neutral-600"
     >
       <FloorHeader floor={floor} now={now} isActive={false} />
     </button>
@@ -229,14 +232,14 @@ function ActiveFloorCard({
   const others = floor.sessions.filter((s) => s.id !== sessionId);
 
   return (
-    <div className="rounded-2xl border border-claude-300/80 bg-white px-3 py-2.5 shadow-sm ring-2 ring-claude-100">
+    <div className="rounded-2xl border border-claude-300/80 bg-white px-3 py-2.5 shadow-sm ring-2 ring-claude-100 dark:border-claude-600/50 dark:bg-neutral-900 dark:ring-claude-950">
       <FloorHeader floor={floor} now={now} isActive={true} />
-      <div className="mt-2.5 border-t border-slate-100 pt-2">
+      <div className="mt-2.5 border-t border-slate-100 pt-2 dark:border-neutral-800">
         <button
           type="button"
           onClick={() => void setAutoFollow(!autoFollow)}
           aria-pressed={autoFollow}
-          className={`flex w-full items-center gap-1.5 rounded-lg px-1.5 py-1 text-left text-xs transition-colors ${
+          className={`flex w-full cursor-pointer items-center gap-1.5 rounded-lg px-1.5 py-1 text-left text-xs transition-colors ${
             autoFollow
               ? "text-claude-700"
               : "text-slate-500 hover:text-slate-700"
@@ -296,8 +299,8 @@ function SessionRow({
         aria-current={isCurrent ? "true" : undefined}
         className={`flex w-full items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs transition-colors ${
           isCurrent
-            ? "bg-slate-100 font-semibold text-slate-800"
-            : "text-slate-600 hover:bg-slate-50"
+            ? "cursor-default bg-slate-100 font-semibold text-slate-800 dark:bg-neutral-800 dark:text-neutral-100"
+            : "cursor-pointer text-slate-600 hover:bg-slate-50 dark:text-neutral-300 dark:hover:bg-neutral-800/80"
         }`}
       >
         {isCurrent && (
@@ -310,6 +313,7 @@ function SessionRow({
         <span className="min-w-0 flex-1 truncate">
           {sessionTitle(t, session)}
         </span>
+        <StalkerAgentChip source={session.agentSource} />
         <span
           className={`shrink-0 text-[10px] ${
             live && isCurrent

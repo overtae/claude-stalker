@@ -74,6 +74,9 @@ const en = {
   "settings.clockTip":
     "Tip: Click the clock in the office to quickly cycle between modes.",
   "settings.language": "Language",
+  "settings.uiTheme": "Appearance",
+  "settings.uiTheme.light": "Light",
+  "settings.uiTheme.dark": "Dark",
   "settings.tabs.general": "General",
   "settings.tabs.building": "Building",
   "settings.building.name": "Building Name",
@@ -320,6 +323,8 @@ const en = {
   "stalker.officePeople": "Office",
   "stalker.activityLog": "Activity log",
   "stalker.legend": "Where work happens",
+  "stalker.legend.collapse": "Collapse zone guide",
+  "stalker.legend.expand": "Expand zone guide",
   "stalker.loading": "Loading…",
   "stalker.waiting": "Idle…",
   "stalker.nowIn": "Now: {zone}",

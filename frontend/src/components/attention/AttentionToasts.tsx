@@ -4,6 +4,7 @@ import { useEffect, useCallback, type ReactNode } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useAttentionStore, type UrgencyLevel } from "@/stores/attentionStore";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useMainAgent } from "@/hooks/useMainAgent";
 import type { TranslationKey } from "@/i18n";
 import type { EventType } from "@/types";
 
@@ -82,10 +83,11 @@ function ToastItem({
   onDismiss: () => void;
 }): ReactNode {
   const { t } = useTranslation();
+  const mainAgent = useMainAgent();
   const colorClass = URGENCY_COLORS[toast.urgencyLevel];
   const icon = URGENCY_ICONS[toast.urgencyLevel];
   const key = TOAST_KEYS[toast.eventType];
-  const who = toast.agentName ?? t("stalker.claude");
+  const who = toast.agentName ?? mainAgent.name;
   const headline = key
     ? t(key, { agentName: who, taskDescription: toast.description })
     : t(`eventType.${toast.eventType}` as TranslationKey);

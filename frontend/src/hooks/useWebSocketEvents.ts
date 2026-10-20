@@ -14,7 +14,7 @@
 
 "use client";
 
-import { WS_BASE } from "@/utils/api";
+import { apiFetch, WS_BASE } from "@/utils/api";
 import { useCallback, useEffect, useRef } from "react";
 import { useGameStore } from "@/stores/gameStore";
 import { useAttentionStore } from "@/stores/attentionStore";
@@ -25,7 +25,7 @@ import { TypingTracker } from "@/systems/typingTracker";
 import { reconcileState } from "@/systems/stateReconciler";
 import { shouldShowToast } from "@/systems/toastFilter";
 import { WebSocketController } from "@/systems/webSocketController";
-import type { EventType, WebSocketMessage } from "@/types";
+import type { EventType, GameState, WebSocketMessage } from "@/types";
 
 // ============================================================================
 // TYPES
@@ -250,6 +250,34 @@ export function useWebSocketEvents({
     return () => {
       controllerRef.current?.disconnect();
       typingTrackerRef.current?.clear();
+    };
+  }, [sessionId, enabled]);
+
+  // REST snapshot when WS is blocked (e.g. port 8000 taken by the desktop app).
+  useEffect(() => {
+    if (!enabled || !sessionId) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await apiFetch(
+          `/api/v1/sessions/${encodeURIComponent(sessionId)}/state`,
+        );
+        if (cancelled || !res.ok) return;
+        const state = (await res.json()) as GameState;
+        reconcileState(state, {
+          currentSessionId: sessionId,
+          processedAgents: processedAgentsRef.current,
+          lastSeenBubbleText: lastSeenBubbleTextRef.current,
+          initialQueueSyncDone: initialQueueSyncDoneRef,
+        });
+      } catch {
+        // Non-fatal; WebSocket may still connect.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
     };
   }, [sessionId, enabled]);
 }

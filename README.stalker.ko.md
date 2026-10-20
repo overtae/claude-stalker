@@ -31,17 +31,28 @@ make dev-tmux
 ```
 
 - UI: http://localhost:3000  
-- 백엔드가 `~/.claude/projects/**/*.jsonl` 을 폴링합니다. **hooks 없이**도 동작합니다.  
-- 더 빠른 이벤트 전달이 필요하면 `make hooks-install` (선택).
+- **Claude Code**: `make hooks-install` 후 훅이 `POST /api/v1/events`로 이벤트를 보냅니다.  
+- **Cursor IDE**: 백엔드가 `~/.cursor/projects/.../agent-transcripts/**/*.jsonl`을 주기적으로 tail 해서 같은 이벤트 스트림으로 반영합니다 (훅 불필요).
 
 ### Cursor IDE
 
-Cursor agent transcript (`~/.cursor/projects/.../agent-transcripts/*.jsonl`)는 기본적으로 허용됩니다.  
-다른 경로만 쓰는 경우:
+기본값으로 Cursor ingest가 켜져 있습니다 (`STALKER_CURSOR_INGEST=1`).  
+백엔드 기동 이후 **새로 append 되는** transcript 줄만 반영합니다 (재시작 시점 이전 내용은 재생하지 않음).
+
+다른 transcript 루트만 쓰는 경우:
 
 ```bash
 export STALKER_CURSOR_TRANSCRIPT_ROOTS="$HOME/.cursor,/custom/transcripts"
 ```
+
+끄기: `STALKER_CURSOR_INGEST=0` · 폴링 간격: `STALKER_CURSOR_POLL_INTERVAL` (초, 기본 2)
+
+### 연결(오프라인) 문제
+
+| 증상 | 원인 | 조치 |
+|------|------|------|
+| 맵 우측 상단 **오프라인**, 세션은 보임 | 프론트가 잘못된 포트의 백엔드에 WS 연결 | `Claude Stalker.app` 종료 후 `make dev-tmux` 재시작, 브라우저 새로고침 |
+| Cursor 채팅 후에도 활동 없음 | 백엔드 기동 **이후** append 된 JSONL만 ingest | 백엔드 켠 뒤 Cursor에서 한 턴 더 보내기 |
 
 ## cowboy76 기능 체크리스트
 

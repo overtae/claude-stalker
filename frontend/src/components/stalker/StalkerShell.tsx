@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import type { Session } from "@/hooks/useSessions";
-import { stalkerTheme } from "@/constants/stalkerTheme";
+import { useStalkerTheme } from "@/hooks/useStalkerTheme";
+import { StalkerThemeSync } from "@/components/stalker/StalkerThemeSync";
 import { StalkerLeftRail } from "@/components/stalker/StalkerLeftRail";
 import { StalkerRightRail } from "@/components/stalker/StalkerRightRail";
 import { StalkerMapHeader } from "@/components/stalker/StalkerMapHeader";
@@ -11,6 +12,8 @@ import { StalkerLangSync } from "@/components/stalker/StalkerLangSync";
 import { useTranslation } from "@/hooks/useTranslation";
 import { buildFloors, sessionTitle } from "@/utils/stalkerFormat";
 import { useNavigationStore } from "@/stores/navigationStore";
+import { useMainAgentStore } from "@/stores/mainAgentStore";
+import { toAgentSource } from "@/utils/agentBrand";
 import CommandBar, {
   type CommandEntry,
 } from "@/components/attention/CommandBar";
@@ -56,6 +59,7 @@ export function StalkerShell({
   onSessionSelect,
 }: StalkerShellProps): ReactNode {
   const { t } = useTranslation();
+  const stalkerTheme = useStalkerTheme();
   const now = useNow();
   const buildingConfig = useNavigationStore((s) => s.buildingConfig);
   const floors = useMemo(
@@ -63,6 +67,10 @@ export function StalkerShell({
     [t, sessions, buildingConfig],
   );
   const session = sessions.find((s) => s.id === sessionId) ?? null;
+  // Who drives this session (Claude Code, Cursor…) — names/colours the main agent.
+  const setAgentSource = useMainAgentStore((s) => s.setSource);
+  const agentSource = toAgentSource(session?.agentSource);
+  useEffect(() => setAgentSource(agentSource), [agentSource, setAgentSource]);
   const activeFloor =
     floors.find((f) => f.sessions.some((s) => s.id === sessionId)) ?? null;
   const hasConfiguredFloors = (buildingConfig?.floors.length ?? 0) > 0;
@@ -102,6 +110,7 @@ export function StalkerShell({
       style={{ background: stalkerTheme.pageBg, color: stalkerTheme.text }}
     >
       <StalkerLangSync />
+      <StalkerThemeSync />
       <StalkerLeftRail
         floors={floors}
         activeFloorKey={activeFloor?.key ?? null}
@@ -114,7 +123,7 @@ export function StalkerShell({
         onSessionSelect={onSessionSelect}
       />
 
-      <main className="relative min-h-0 min-w-0 flex-1 overflow-hidden rounded-3xl border border-slate-200/70 bg-[#eef2f6] shadow-sm">
+      <main className="relative min-h-0 min-w-0 flex-1 overflow-hidden rounded-3xl border border-slate-200/70 bg-[#eef2f6] shadow-sm dark:border-neutral-700/70 dark:bg-[#262626]">
         <StalkerGameCanvas />
         <StalkerMapHeader floor={activeFloor} session={session} />
       </main>

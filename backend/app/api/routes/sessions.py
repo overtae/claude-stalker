@@ -61,6 +61,7 @@ class SessionSummary(TypedDict):
     eventCount: int
     floorId: str | None
     roomId: str | None
+    agentSource: str
 
 
 class ReplayEvent(TypedDict):
@@ -180,6 +181,7 @@ async def list_sessions(
                 "eventCount": count,
                 "floorId": rec.floor_id,
                 "roomId": rec.room_id,
+                "agentSource": rec.agent_source or "claude",
             }
         )
     return sessions
@@ -403,6 +405,15 @@ async def focus_session(
                 logger.warning("Clipboard command not found: %s", clipboard_cmd[0])
 
     return {"status": "success", "message": f"Session {session_id} focused"}
+
+
+@router.get("/{session_id}/state")
+async def get_session_state(session_id: str) -> dict[str, Any]:
+    """Return the current in-memory game state for a session (REST fallback for the WS snapshot)."""
+    state = await get_event_processor().get_current_state(session_id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="Session not found or no state")
+    return state.model_dump(mode="json", by_alias=True)
 
 
 @router.get("/{session_id}/replay")

@@ -76,6 +76,9 @@ const ptBR: Record<TranslationKey, string> = {
   "settings.clockTip":
     "Dica: Clique no relógio do escritório para alternar rapidamente entre os modos.",
   "settings.language": "Idioma",
+  "settings.uiTheme": "Appearance",
+  "settings.uiTheme.light": "Light",
+  "settings.uiTheme.dark": "Dark",
   "settings.tabs.general": "Geral",
   "settings.tabs.building": "Edifício",
   "settings.building.name": "Nome do Edifício",
@@ -322,6 +325,8 @@ const ptBR: Record<TranslationKey, string> = {
     "stalker.officePeople": "Office",
     "stalker.activityLog": "Activity log",
     "stalker.legend": "Where work happens",
+    "stalker.legend.collapse": "Collapse zone guide",
+    "stalker.legend.expand": "Expand zone guide",
     "stalker.loading": "Loading…",
     "stalker.waiting": "Idle…",
     "stalker.nowIn": "Now: {zone}",

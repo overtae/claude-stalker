@@ -5,9 +5,10 @@ import { createPortal } from "react-dom";
 import { useAttentionStore, selectFocusPopup } from "@/stores/attentionStore";
 import { useGameStore, selectSessionId } from "@/stores/gameStore";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useMainAgent } from "@/hooks/useMainAgent";
 import type { AgentAnimationState } from "@/stores/gameStore";
 import type { TranslationKey } from "@/i18n";
-import { CLAUDE_COLOR, agentColor, toCssColor } from "@/utils/stalkerFormat";
+import { agentColor, toCssColor } from "@/utils/stalkerFormat";
 
 const POPUP_WIDTH = 260;
 const POPUP_MARGIN = 16;
@@ -20,6 +21,7 @@ export default function AgentPopup(): ReactNode {
   const boss = useGameStore((s) => s.boss);
   const sessionId = useGameStore(selectSessionId);
   const { t } = useTranslation();
+  const mainAgent = useMainAgent();
 
   const handleFocusTerminal = useCallback(() => {
     if (!sessionId) return;
@@ -58,10 +60,10 @@ export default function AgentPopup(): ReactNode {
   if (y < POPUP_MARGIN) y = POPUP_MARGIN;
 
   const displayName = isBoss
-    ? t("stalker.claude")
+    ? mainAgent.name
     : (agent?.name ?? focusPopup.agentId);
   const displayColor = toCssColor(
-    isBoss ? CLAUDE_COLOR : agentColor(agent?.number ?? 1),
+    isBoss ? mainAgent.color : agentColor(agent?.number ?? 1),
   );
   const displayState = isBoss
     ? t(`bossState.${boss.backendState}` as TranslationKey)

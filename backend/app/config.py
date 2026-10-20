@@ -94,6 +94,10 @@ class Settings(BaseSettings):
     # Default when empty: ~/.cursor (resolved in transcript_roots()).
     STALKER_CURSOR_TRANSCRIPT_ROOTS: str = ""
 
+    # Tail Cursor agent-transcripts under STALKER_CURSOR_TRANSCRIPT_ROOTS (default ~/.cursor).
+    STALKER_CURSOR_INGEST: bool = True
+    STALKER_CURSOR_POLL_INTERVAL: float = 2.0
+
     # When a subagent's transcript stays inactive for more than this many
     # seconds, the transcript poller assumes the agent crashed (rate-limit,
     # interruption, ...) and emits a synthetic SubagentStop so the office

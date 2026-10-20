@@ -5,11 +5,24 @@ vi.mock("@/utils/api", () => ({ apiFetch: vi.fn() }));
 import { pickInitialSession, type Session } from "../src/hooks/useSessions";
 import { parseServerTime } from "../src/utils/serverTime";
 
-function session(id: string, updatedAt: string, eventCount: number, status = "active"): Session {
+function session(
+  id: string,
+  updatedAt: string,
+  eventCount: number,
+  status = "active",
+): Session {
   return {
-    id, updatedAt, eventCount, status,
-    label: null, displayName: null, projectName: null, projectRoot: null,
-    createdAt: updatedAt, floorId: null, roomId: null,
+    id,
+    updatedAt,
+    eventCount,
+    status,
+    label: null,
+    displayName: null,
+    projectName: null,
+    projectRoot: null,
+    createdAt: updatedAt,
+    floorId: null,
+    roomId: null,
   };
 }
 
@@ -34,10 +47,14 @@ describe("pickInitialSession", () => {
 
 describe("parseServerTime", () => {
   it("reads offset-less backend timestamps as UTC", () => {
-    expect(parseServerTime("2026-10-20T06:27:27.149679").toISOString()).toBe("2026-10-20T06:27:27.149Z");
+    expect(parseServerTime("2026-10-20T06:27:27.149679").toISOString()).toBe(
+      "2026-10-20T06:27:27.149Z",
+    );
   });
 
   it("keeps explicit offsets", () => {
-    expect(parseServerTime("2026-10-20T06:27:27+09:00").toISOString()).toBe("2026-10-19T21:27:27.000Z");
+    expect(parseServerTime("2026-10-20T06:27:27+09:00").toISOString()).toBe(
+      "2026-10-19T21:27:27.000Z",
+    );
   });
 });

@@ -23,6 +23,7 @@ from app.core.connection_manager import (
 
 # Valid session/room IDs: alphanumeric, dashes, underscores only
 _VALID_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{1,128}$")
+_DEV_BROWSER_ORIGIN = re.compile(r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$")
 
 # Loopback hosts permitted for browser WebSocket handshakes. The allowlist is
 # derived from ``settings.BACKEND_CORS_ORIGINS`` at call time but filtered to
@@ -58,7 +59,10 @@ def validate_websocket_origin(websocket: WebSocket) -> bool:
     """
     origin = websocket.headers.get("origin")
     if origin is not None:
-        return origin.rstrip("/") in _allowed_ws_origins()
+        normalized = origin.rstrip("/")
+        if normalized in _allowed_ws_origins():
+            return True
+        return bool(_DEV_BROWSER_ORIGIN.match(normalized))
 
     # Non-browser clients (no Origin) — always require the effective API key
     from app.config import get_settings

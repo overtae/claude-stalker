@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 import { format } from "date-fns";
 import type { EventLogEntry } from "@/stores/gameStore";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useMainAgent } from "@/hooks/useMainAgent";
 import { usePreferencesStore } from "@/stores/preferencesStore";
 import type { TranslationKey } from "@/i18n";
 import Modal from "@/components/overlay/Modal";
@@ -20,21 +21,55 @@ interface EventDetailModalProps {
 /** Events from the main Claude session carry this agent id. */
 const MAIN_AGENT_ID = "main";
 
-const TIME_FORMAT = { ko: "yyyy. M. d. a h:mm:ss", en: "MMM d, HH:mm:ss" } as const;
+const TIME_FORMAT = {
+  ko: "yyyy. M. d. a h:mm:ss",
+  en: "MMM d, HH:mm:ss",
+} as const;
 
 /** Text fields shown as labelled blocks, in display order. */
-const TEXT_FIELDS: { key: "toolName" | "agentName" | "taskDescription" | "prompt" | "thinking" | "message" | "resultSummary" | "errorType"; label: TranslationKey; tone?: string; mono?: boolean }[] = [
+const TEXT_FIELDS: {
+  key:
+    | "toolName"
+    | "agentName"
+    | "taskDescription"
+    | "prompt"
+    | "thinking"
+    | "message"
+    | "resultSummary"
+    | "errorType";
+  label: TranslationKey;
+  tone?: string;
+  mono?: boolean;
+}[] = [
   { key: "toolName", label: "eventDetail.tool", mono: true },
   { key: "agentName", label: "eventDetail.agentName" },
   { key: "taskDescription", label: "eventDetail.taskDescription" },
-  { key: "prompt", label: "eventDetail.userPrompt", tone: "bg-claude-50 border-claude-100 text-slate-800" },
-  { key: "thinking", label: "eventDetail.thinking", tone: "bg-slate-50 border-slate-100 italic text-slate-500" },
+  {
+    key: "prompt",
+    label: "eventDetail.userPrompt",
+    tone: "bg-claude-50 border-claude-100 text-slate-800",
+  },
+  {
+    key: "thinking",
+    label: "eventDetail.thinking",
+    tone: "bg-slate-50 border-slate-100 italic text-slate-500",
+  },
   { key: "message", label: "eventDetail.message" },
   { key: "resultSummary", label: "eventDetail.resultSummary" },
-  { key: "errorType", label: "eventDetail.errorType", tone: "bg-rose-50 border-rose-100 text-rose-700" },
+  {
+    key: "errorType",
+    label: "eventDetail.errorType",
+    tone: "bg-rose-50 border-rose-100 text-rose-700",
+  },
 ];
 
-function Field({ label, children }: { label: string; children: ReactNode }): ReactNode {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}): ReactNode {
   return (
     <section>
       <h3 className="mb-1 text-[11px] font-semibold text-slate-400">{label}</h3>
@@ -45,6 +80,7 @@ function Field({ label, children }: { label: string; children: ReactNode }): Rea
 
 export function EventDetailModal({ event, onClose }: EventDetailModalProps) {
   const { t } = useTranslation();
+  const mainAgent = useMainAgent();
   const language = usePreferencesStore((s) => s.language);
   const detail = event.detail ?? {};
   const fields = TEXT_FIELDS.filter(({ key }) => detail[key]);
@@ -74,12 +110,16 @@ export function EventDetailModal({ event, onClose }: EventDetailModalProps) {
       <div className="space-y-4">
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 rounded-2xl bg-slate-50 px-4 py-3 text-xs">
           <dt className="text-slate-400">{t("eventDetail.time")}</dt>
-          <dd className="tabular-nums text-slate-700">{format(event.timestamp, TIME_FORMAT[language])}</dd>
+          <dd className="tabular-nums text-slate-700">
+            {format(event.timestamp, TIME_FORMAT[language])}
+          </dd>
           {event.agentId && (
             <>
               <dt className="text-slate-400">{t("eventDetail.actor")}</dt>
               <dd className="truncate text-slate-700">
-                {event.agentId === MAIN_AGENT_ID ? t("stalker.claude") : (
+                {event.agentId === MAIN_AGENT_ID ? (
+                  mainAgent.name
+                ) : (
                   <span className="font-mono">{event.agentId}</span>
                 )}
               </dd>
@@ -112,7 +152,9 @@ export function EventDetailModal({ event, onClose }: EventDetailModalProps) {
         )}
 
         {!hasDetail && (
-          <p className="py-2 text-center text-xs text-slate-400">{t("eventDetail.noDetail")}</p>
+          <p className="py-2 text-center text-xs text-slate-400">
+            {t("eventDetail.noDetail")}
+          </p>
         )}
       </div>
     </Modal>

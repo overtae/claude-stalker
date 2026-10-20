@@ -150,8 +150,11 @@ function Kanban({ tasks }: { tasks: KanbanTask[] }): ReactNode {
       {KANBAN_COLUMNS.map((col) => {
         const items = tasks.filter((task) => task.status === col.status);
         return (
-          <div key={col.status} className="min-w-0 rounded-xl bg-slate-50 p-2">
-            <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-slate-600">
+          <div
+            key={col.status}
+            className="min-w-0 rounded-xl bg-slate-50 p-2 dark:bg-neutral-800/80"
+          >
+            <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-slate-600 dark:text-neutral-300">
               <span className={`h-2 w-2 rounded-full ${col.dot}`} aria-hidden />
               {t(col.label)}
               <span className="ml-auto font-normal text-slate-400">
@@ -162,7 +165,7 @@ function Kanban({ tasks }: { tasks: KanbanTask[] }): ReactNode {
               {items.map((task) => (
                 <li
                   key={task.taskId}
-                  className="rounded-lg border border-slate-200/70 bg-white px-2 py-1.5 text-[11px] leading-snug text-slate-700 shadow-sm"
+                  className="rounded-lg border border-slate-200/70 bg-white px-2 py-1.5 text-[11px] leading-snug text-slate-700 shadow-sm dark:border-neutral-600/70 dark:bg-neutral-900 dark:text-neutral-200"
                 >
                   {task.subject}
                   {task.assignee && (
@@ -253,24 +256,24 @@ export function StalkerWhiteboard({
     <div
       role="dialog"
       aria-label={t("stalker.whiteboard")}
-      className="absolute left-4 top-24 z-30 w-[min(440px,calc(100%-2rem))] rounded-2xl border border-slate-200/80 bg-white/97 p-3 shadow-xl backdrop-blur"
+      className="absolute left-4 top-24 z-30 w-[min(440px,calc(100%-2rem))] rounded-2xl border border-slate-200/80 bg-white/97 p-3 shadow-xl backdrop-blur dark:border-neutral-700/80 dark:bg-neutral-900/97"
     >
       <header className="mb-2 flex items-center gap-2 px-1">
-        <h2 className="text-sm font-bold text-slate-800">
+        <h2 className="text-sm font-bold text-slate-800 dark:text-neutral-100">
           📋 {t("stalker.whiteboard")}
         </h2>
         <button
           type="button"
           onClick={onClose}
           aria-label={t("modal.close")}
-          className="ml-auto rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+          className="ml-auto cursor-pointer rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
         >
           <X size={16} />
         </button>
       </header>
       <div
         role="tablist"
-        className="mb-3 flex gap-0.5 rounded-xl bg-slate-100 p-0.5"
+        className="mb-3 flex gap-0.5 rounded-xl bg-slate-100 p-0.5 dark:bg-neutral-800"
       >
         {MODES.map(({ id, label, icon }) => (
           <button
@@ -279,10 +282,10 @@ export function StalkerWhiteboard({
             role="tab"
             aria-selected={mode === id}
             onClick={() => setMode(id)}
-            className={`flex-1 rounded-[10px] py-1 text-xs font-semibold transition-colors ${
+            className={`flex-1 cursor-pointer rounded-[10px] py-1 text-xs font-semibold transition-colors ${
               mode === id
-                ? "bg-white text-slate-800 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
+                ? "bg-white text-slate-800 shadow-sm dark:bg-neutral-700 dark:text-neutral-100"
+                : "text-slate-500 hover:text-slate-700 dark:text-neutral-400 dark:hover:text-neutral-200"
             }`}
           >
             <span className="mr-1" aria-hidden>

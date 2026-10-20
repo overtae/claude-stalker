@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useGameStore, selectConversation } from "@/stores/gameStore";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useMainAgent } from "@/hooks/useMainAgent";
 import type { ConversationEntry } from "@/types";
 
 /** Long assistant replies are clipped; the full text lives in the transcript. */
@@ -10,6 +11,7 @@ const MAX_LINES_CLASS = "line-clamp-6";
 
 function Message({ entry }: { entry: ConversationEntry }): ReactNode {
   const { t } = useTranslation();
+  const mainAgent = useMainAgent();
 
   if (entry.role === "thinking") {
     return (
@@ -28,11 +30,11 @@ function Message({ entry }: { entry: ConversationEntry }): ReactNode {
         className={`max-w-[88%] rounded-2xl px-3 py-2 text-xs leading-relaxed ${
           isUser
             ? "rounded-tr-md bg-claude-600 text-white"
-            : "rounded-tl-md bg-slate-100 text-slate-700"
+            : "rounded-tl-md bg-slate-100 text-slate-700 dark:bg-neutral-800 dark:text-neutral-200"
         }`}
       >
         <p className="mb-0.5 text-[10px] font-bold opacity-70">
-          {isUser ? t("stalker.you.said") : t("stalker.claude")}
+          {isUser ? t("stalker.you.said") : mainAgent.name}
         </p>
         <p className={`whitespace-pre-wrap break-words ${MAX_LINES_CLASS}`}>
           {entry.text}

@@ -41,7 +41,7 @@ export function StalkerGitList(): ReactNode {
 
   return (
     <div className="min-h-0 flex-1 space-y-3 overflow-y-auto py-1">
-      <p className="flex items-center gap-1.5 px-1 text-xs font-semibold text-slate-700">
+      <p className="flex items-center gap-1.5 px-1 text-xs font-semibold text-slate-700 dark:text-neutral-200">
         <GitBranch size={13} className="text-slate-400" aria-hidden />
         <span className="truncate font-mono">{git.branch}</span>
         {((git.ahead ?? 0) > 0 || (git.behind ?? 0) > 0) && (
@@ -67,7 +67,7 @@ export function StalkerGitList(): ReactNode {
             {files.map((file) => (
               <li
                 key={file.path}
-                className="flex items-center gap-2 rounded-md px-1 py-0.5 text-[11px] hover:bg-slate-50"
+                className="flex items-center gap-2 rounded-md px-1 py-0.5 text-[11px] hover:bg-slate-50 dark:hover:bg-neutral-800/80"
               >
                 <span
                   className={`w-3 shrink-0 text-center font-mono font-bold ${STATUS_STYLE[file.status] ?? "text-slate-400"}`}
@@ -76,7 +76,7 @@ export function StalkerGitList(): ReactNode {
                   {file.status}
                 </span>
                 <span
-                  className="truncate font-mono text-slate-600"
+                  className="truncate font-mono text-slate-600 dark:text-neutral-300"
                   title={file.path}
                 >
                   {file.path}
@@ -99,7 +99,9 @@ export function StalkerGitList(): ReactNode {
           <ul className="space-y-1">
             {commits.map((commit) => (
               <li key={commit.hash} className="px-1 text-[11px]">
-                <p className="truncate text-slate-700">{commit.message}</p>
+                <p className="truncate text-slate-700 dark:text-neutral-200">
+                  {commit.message}
+                </p>
                 <p className="text-[10px] text-slate-400">
                   <span className="font-mono">{commit.hash}</span> ·{" "}
                   {commit.author} · {commit.relative_time}

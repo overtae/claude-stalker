@@ -26,6 +26,8 @@ export interface Session {
   eventCount: number;
   floorId: string | null;
   roomId: string | null;
+  /** "claude" | "cursor" | "opencode" — older backends omit it. */
+  agentSource?: string;
 }
 
 // ============================================================================
@@ -44,9 +46,13 @@ const MIN_MAIN_SESSION_EVENTS = 5;
 export function pickInitialSession(sessions: Session[]): Session | undefined {
   const active = sessions.filter((s) => s.status === "active");
   const pool = active.length > 0 ? active : sessions;
-  const substantial = pool.filter((s) => s.eventCount >= MIN_MAIN_SESSION_EVENTS);
+  const substantial = pool.filter(
+    (s) => s.eventCount >= MIN_MAIN_SESSION_EVENTS,
+  );
   const candidates = substantial.length > 0 ? substantial : pool;
-  return [...candidates].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
+  return [...candidates].sort((a, b) =>
+    b.updatedAt.localeCompare(a.updatedAt),
+  )[0];
 }
 
 interface UseSessionsResult {

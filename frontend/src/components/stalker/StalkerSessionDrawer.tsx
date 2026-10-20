@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { X } from "lucide-react";
 import type { Session } from "@/hooks/useSessions";
-import { stalkerTheme } from "@/constants/stalkerTheme";
+import { useStalkerTheme } from "@/hooks/useStalkerTheme";
 
 export interface StalkerSessionDrawerProps {
   open: boolean;
@@ -31,6 +31,8 @@ export function StalkerSessionDrawer({
   sessionId,
   onSessionSelect,
 }: StalkerSessionDrawerProps): ReactNode {
+  const stalkerTheme = useStalkerTheme();
+
   if (!open) {
     return null;
   }
@@ -39,7 +41,7 @@ export function StalkerSessionDrawer({
     <>
       <button
         type="button"
-        className="fixed inset-0 z-40 bg-slate-900/20"
+        className="fixed inset-0 z-40 cursor-pointer bg-slate-900/20"
         aria-label="닫기"
         onClick={onClose}
       />
@@ -64,7 +66,7 @@ export function StalkerSessionDrawer({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1 text-slate-500 hover:bg-slate-100"
+            className="cursor-pointer rounded-lg p-1 text-slate-500 hover:bg-slate-100 dark:hover:bg-neutral-800"
             aria-label="닫기"
           >
             <X size={18} />
@@ -89,8 +91,8 @@ export function StalkerSessionDrawer({
                     onClick={() => void onSessionSelect(session.id)}
                     className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                       active
-                        ? "bg-claude-50 font-semibold text-claude-900"
-                        : "text-slate-700 hover:bg-slate-50"
+                        ? "cursor-default bg-claude-50 font-semibold text-claude-900 dark:bg-claude-950/40 dark:text-claude-200"
+                        : "cursor-pointer text-slate-700 hover:bg-slate-50 dark:text-neutral-200 dark:hover:bg-neutral-800/80"
                     }`}
                   >
                     <span className="block truncate">

@@ -56,7 +56,9 @@ import {
   roomLabelPoint,
 } from "@/systems/stalkerOfficeDraw";
 import { useTranslation } from "@/hooks/useTranslation";
-import { usePreferencesStore } from "@/stores/preferencesStore";
+import { useMainAgent } from "@/hooks/useMainAgent";
+import { usePreferencesStore, selectUiTheme } from "@/stores/preferencesStore";
+import { STALKER_MAP_BG, STALKER_MAP_BG_CSS } from "@/constants/stalkerTheme";
 import { useAttentionStore } from "@/stores/attentionStore";
 import {
   CoffeeCups,
@@ -66,7 +68,7 @@ import {
   WhiteboardHotspot,
 } from "@/components/stalker/StalkerMapProps";
 import { StalkerWhiteboard } from "@/components/stalker/StalkerWhiteboard";
-import { CLAUDE_COLOR, agentColor } from "@/utils/stalkerFormat";
+import { agentColor } from "@/utils/stalkerFormat";
 
 extend({ Container, Graphics, Sprite, Text });
 
@@ -150,6 +152,7 @@ function shortName(agent: AgentAnimationState): string {
 
 export function StalkerGameCanvas(): ReactNode {
   const { t } = useTranslation();
+  const mainAgent = useMainAgent();
   const appRef = useRef<PixiApplication | null>(null);
   const transformRef = useRef<ReactZoomPanPinchRef>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -258,11 +261,18 @@ export function StalkerGameCanvas(): ReactNode {
   const bossPos = toScreen(bossGrid.col, bossGrid.row);
   const userPos = toScreen(USER_SEAT.col, USER_SEAT.row);
 
-  const drawBackdrop = useCallback((g: Graphics) => {
-    g.clear();
-    g.rect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    g.fill({ color: 0xeef2f6 });
-  }, []);
+  const uiTheme = usePreferencesStore(selectUiTheme);
+  const mapBg = STALKER_MAP_BG[uiTheme];
+  const mapBgCss = STALKER_MAP_BG_CSS[uiTheme];
+
+  const drawBackdrop = useCallback(
+    (g: Graphics) => {
+      g.clear();
+      g.rect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      g.fill({ color: mapBg });
+    },
+    [mapBg],
+  );
 
   const agentList = useMemo(() => Array.from(agents.values()), [agents]);
 
@@ -316,7 +326,8 @@ export function StalkerGameCanvas(): ReactNode {
   return (
     <div
       ref={viewportRef}
-      className="relative h-full w-full overflow-hidden bg-[#eef2f6]"
+      className="relative h-full w-full overflow-hidden"
+      style={{ backgroundColor: mapBgCss }}
     >
       {isWhiteboardOpen && <StalkerWhiteboard onClose={closeWhiteboard} />}
       <p className="pointer-events-none absolute bottom-3 right-4 z-20 text-[11px] text-slate-400">
@@ -347,10 +358,10 @@ export function StalkerGameCanvas(): ReactNode {
               style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT }}
             >
               <Application
-                key={`stalker-${hmrVersion}`}
+                key={`stalker-${hmrVersion}-${uiTheme}`}
                 width={CANVAS_WIDTH}
                 height={CANVAS_HEIGHT}
-                backgroundColor={0xeef2f6}
+                backgroundColor={mapBg}
                 autoDensity
                 antialias
                 resolution={
@@ -391,8 +402,8 @@ export function StalkerGameCanvas(): ReactNode {
                     x={bossPos.x}
                     y={bossPos.y}
                     zIndex={isoDepth(bossGrid.col, bossGrid.row) + 1}
-                    color={CLAUDE_COLOR}
-                    name={t("stalker.claude")}
+                    color={mainAgent.color}
+                    name={mainAgent.name}
                     tone="boss"
                     onTap={focusOn(BOSS_FOCUS_ID)}
                   />

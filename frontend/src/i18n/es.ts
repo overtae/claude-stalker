@@ -76,6 +76,9 @@ const es: Record<TranslationKey, string> = {
   "settings.clockTip":
     "Consejo: Haz clic en el reloj de la oficina para alternar rápidamente entre modos.",
   "settings.language": "Idioma",
+  "settings.uiTheme": "Appearance",
+  "settings.uiTheme.light": "Light",
+  "settings.uiTheme.dark": "Dark",
   "settings.tabs.general": "General",
   "settings.tabs.building": "Edificio",
   "settings.building.name": "Nombre del Edificio",
@@ -322,6 +325,8 @@ const es: Record<TranslationKey, string> = {
     "stalker.officePeople": "Office",
     "stalker.activityLog": "Activity log",
     "stalker.legend": "Where work happens",
+    "stalker.legend.collapse": "Collapse zone guide",
+    "stalker.legend.expand": "Expand zone guide",
     "stalker.loading": "Loading…",
     "stalker.waiting": "Idle…",
     "stalker.nowIn": "Now: {zone}",

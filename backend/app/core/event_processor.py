@@ -76,6 +76,9 @@ from app.models.overview import OverviewState
 from app.models.sessions import ConversationEntry, GameState, HistoryEntry
 from app.services.git_service import git_service
 
+#: Producer tags that identify a non-Claude coding agent (persisted per session).
+AGENT_SOURCES = frozenset({"cursor", "opencode"})
+
 logger = logging.getLogger(__name__)
 
 # Prefixes stripped from paths when deriving display names.
@@ -997,6 +1000,10 @@ class EventProcessor:
             # Derive and store display_name on first encounter.
             if display and not session_rec.display_name:
                 session_rec.display_name = display
+
+            # Remember which coding agent this session comes from (UI badge).
+            if event.data.source in AGENT_SOURCES and not session_rec.agent_source:
+                session_rec.agent_source = event.data.source
 
             # Sync team fields to DB record.
             if team_name and not session_rec.team_name:

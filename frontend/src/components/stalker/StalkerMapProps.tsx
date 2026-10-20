@@ -11,6 +11,7 @@ import {
   selectWhiteboardData,
 } from "@/stores/gameStore";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useMainAgent } from "@/hooks/useMainAgent";
 import type { TranslationKey } from "@/i18n";
 import { OFFICE_FURNITURE, toScreen } from "@/constants/stalkerFloorLayout";
 import {
@@ -20,7 +21,7 @@ import {
 } from "@/systems/stalkerOfficeDraw";
 import { StalkerPill } from "@/components/stalker/StalkerPixiBits";
 import { getSessionWeather, WEATHER_ICONS } from "@/utils/sessionWeather";
-import { CLAUDE_COLOR, agentColor } from "@/utils/stalkerFormat";
+import { agentColor } from "@/utils/stalkerFormat";
 import { isoDepth } from "@/systems/stalkerIsoCoords";
 
 const OUTLINE = 0xb5a38c;
@@ -143,6 +144,7 @@ const FRAME = { a: 9.5, b: 10.35, h0: 58, h1: 116 };
 /** Most active actor in the event log (Claude counts as "main"). */
 function useEmployeeOfMonth(): { name: string; color: number } {
   const { t } = useTranslation();
+  const mainAgent = useMainAgent();
   const eventLog = useGameStore(selectEventLog);
   const agents = useGameStore(useShallow(selectAgents));
 
@@ -156,13 +158,13 @@ function useEmployeeOfMonth(): { name: string; color: number } {
     const top = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
     const agent = top ? agents.get(top[0]) : undefined;
     if (!agent) {
-      return { name: t("stalker.claude"), color: CLAUDE_COLOR };
+      return { name: mainAgent.name, color: mainAgent.color };
     }
     return {
       name: agent.name ?? `${t("agentStatus.agent")} #${agent.number}`,
       color: agentColor(agent.number),
     };
-  }, [eventLog, agents, t]);
+  }, [eventLog, agents, t, mainAgent.name, mainAgent.color]);
 }
 
 export function EmployeeFrame(): ReactNode {
@@ -298,8 +300,8 @@ export function NewsTicker(): ReactNode {
 // ---------------------------------------------------------------------------
 
 const CAT_SPOT = { col: 11.7, row: 9.0 };
-const CAT_FUR = 0xf4b183;
-const CAT_STRIPE = 0xe08f5a;
+const CAT_FUR = 0xb8bcc4;
+const CAT_STRIPE = 0x7a828c;
 const BREATH_SPEED = 0.0025;
 
 function drawCat(g: Graphics): void {
@@ -324,7 +326,7 @@ function drawCat(g: Graphics): void {
   g.fill({ color: CAT_FUR });
   g.poly([-13.5, -14, -12.8, -17.5, -10.8, -14.5]);
   g.poly([-6, -14.5, -4.3, -17.5, -3.5, -14]);
-  g.fill({ color: 0xf7c6c9 });
+  g.fill({ color: 0xe8e0e4 });
   g.circle(-8.5, -9, 7.5);
   g.fill({ color: CAT_FUR });
   // closed eyes, nose, cheeks
@@ -334,7 +336,7 @@ function drawCat(g: Graphics): void {
     g.moveTo(cx + Math.cos(start) * 1.6, -9.5 + Math.sin(start) * 1.6);
     g.arc(cx, -9.5, 1.6, start, Math.PI - start);
   }
-  g.stroke({ color: 0x6b4430, width: 1.1, cap: "round" });
+  g.stroke({ color: 0x52525b, width: 1.1, cap: "round" });
   g.circle(-8.6, -7, 0.9);
   g.fill({ color: 0xe5737f });
   g.circle(-13, -6.6, 1.6);

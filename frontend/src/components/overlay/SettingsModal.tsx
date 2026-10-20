@@ -7,6 +7,7 @@ import {
   usePreferencesStore,
   type ClockType,
   type ClockFormat,
+  type UiTheme,
 } from "@/stores/preferencesStore";
 import { useTranslation } from "@/hooks/useTranslation";
 import { locales, type Locale } from "@/i18n";
@@ -52,9 +53,11 @@ function SettingsToggle({
           onChange();
         }
       }}
-      className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white p-2.5 transition-colors hover:border-slate-300 hover:bg-slate-50"
+      className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white p-2.5 transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-neutral-600 dark:bg-neutral-800 dark:hover:border-neutral-500 dark:hover:bg-neutral-700/80"
     >
-      <span className="text-sm text-slate-700">{label}</span>
+      <span className="text-sm text-slate-700 dark:text-neutral-200">
+        {label}
+      </span>
       <div
         className={`w-9 h-5 rounded-full relative transition-colors ${
           checked ? "bg-claude-500" : "bg-slate-300"
@@ -101,6 +104,8 @@ export default function SettingsModal({
   const setClockFormat = usePreferencesStore((s) => s.setClockFormat);
   const language = usePreferencesStore((s) => s.language);
   const setLanguage = usePreferencesStore((s) => s.setLanguage);
+  const uiTheme = usePreferencesStore((s) => s.uiTheme);
+  const setUiTheme = usePreferencesStore((s) => s.setUiTheme);
   const setAutoFollowNewSessions = usePreferencesStore(
     (s) => s.setAutoFollowNewSessions,
   );
@@ -155,6 +160,10 @@ export default function SettingsModal({
     setLanguage(locale);
   };
 
+  const handleUiThemeChange = (theme: UiTheme) => {
+    setUiTheme(theme);
+  };
+
   const handleClockTypeChange = (type: ClockType) => {
     setClockType(type);
   };
@@ -176,23 +185,23 @@ export default function SettingsModal({
       footer={
         <button
           onClick={onClose}
-          className="rounded-xl bg-claude-500 px-4 py-1.5 text-xs font-bold text-white transition-colors hover:bg-claude-600"
+          className="cursor-pointer rounded-xl bg-claude-500 px-4 py-1.5 text-xs font-bold text-white transition-colors hover:bg-claude-600"
         >
           {t("modal.close")}
         </button>
       }
     >
       {/* Tab bar */}
-      <div className="mb-6 flex gap-0.5 rounded-xl bg-slate-100 p-0.5">
+      <div className="mb-6 flex gap-0.5 rounded-xl bg-slate-100 p-0.5 dark:bg-neutral-800">
         {(["general", "building"] as const).map((tab) => (
           <button
             key={tab}
             type="button"
             onClick={() => handleTabSwitch(tab)}
-            className={`flex-1 rounded-[10px] px-4 py-1.5 text-sm font-semibold transition-colors ${
+            className={`flex-1 cursor-pointer rounded-[10px] px-4 py-1.5 text-sm font-semibold transition-colors ${
               activeTab === tab
-                ? "bg-white text-slate-800 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
+                ? "bg-white text-slate-800 shadow-sm dark:bg-neutral-700 dark:text-neutral-100"
+                : "text-slate-500 hover:text-slate-700 dark:text-neutral-400 dark:hover:text-neutral-200"
             }`}
           >
             {t(`settings.tabs.${tab}`)}
@@ -208,7 +217,7 @@ export default function SettingsModal({
         <div className="space-y-6">
           {/* Language */}
           <div>
-            <label className="mb-2 block text-xs font-semibold text-slate-500">
+            <label className="mb-2 block text-xs font-semibold text-slate-500 dark:text-neutral-400">
               {t("settings.language")}
             </label>
             <div
@@ -243,16 +252,71 @@ export default function SettingsModal({
                           (parent.children[next] as HTMLElement)?.focus();
                       }
                     }}
-                    className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-claude-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+                    className={`flex-1 cursor-pointer rounded-xl border px-4 py-2.5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-claude-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-900 ${
                       language === locale
-                        ? "border-claude-300 bg-claude-50 text-claude-700"
-                        : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+                        ? "border-claude-300 bg-claude-50 text-claude-700 dark:border-claude-600 dark:bg-neutral-800 dark:text-claude-300"
+                        : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 dark:border-neutral-600 dark:bg-neutral-800/60 dark:text-neutral-400 dark:hover:border-neutral-500"
                     }`}
                   >
                     {label}
                   </button>
                 ),
               )}
+            </div>
+          </div>
+
+          {/* Appearance */}
+          <div>
+            <label className="mb-2 block text-xs font-semibold text-slate-500 dark:text-neutral-400">
+              {t("settings.uiTheme")}
+            </label>
+            <div
+              className="flex gap-3"
+              role="radiogroup"
+              aria-label={t("settings.uiTheme")}
+            >
+              {(["light", "dark"] as const).map((theme) => (
+                <button
+                  key={theme}
+                  type="button"
+                  role="radio"
+                  aria-checked={uiTheme === theme}
+                  tabIndex={uiTheme === theme ? 0 : -1}
+                  onClick={() => handleUiThemeChange(theme)}
+                  onKeyDown={(e) => {
+                    const values: UiTheme[] = ["light", "dark"];
+                    const parent = e.currentTarget.parentElement;
+                    if (!parent) return;
+                    const buttons = Array.from(
+                      parent.children,
+                    ) as HTMLElement[];
+                    const idx = buttons.indexOf(e.currentTarget);
+                    let nextIdx: number | null = null;
+                    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+                      e.preventDefault();
+                      nextIdx = (idx + 1) % values.length;
+                    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+                      e.preventDefault();
+                      nextIdx = (idx - 1 + values.length) % values.length;
+                    }
+                    if (nextIdx !== null) {
+                      handleUiThemeChange(values[nextIdx]);
+                      (parent.children[nextIdx] as HTMLElement)?.focus();
+                    }
+                  }}
+                  className={`flex-1 cursor-pointer rounded-xl border px-4 py-2.5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-claude-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-900 ${
+                    uiTheme === theme
+                      ? "border-claude-300 bg-claude-50 text-claude-700 dark:border-claude-600 dark:bg-neutral-800 dark:text-claude-300"
+                      : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 dark:border-neutral-600 dark:bg-neutral-800/60 dark:text-neutral-400 dark:hover:border-neutral-500"
+                  }`}
+                >
+                  {t(
+                    theme === "light"
+                      ? "settings.uiTheme.light"
+                      : "settings.uiTheme.dark",
+                  )}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -301,10 +365,10 @@ export default function SettingsModal({
                           buttons[nextIdx].focus();
                         }
                       }}
-                      className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-claude-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+                      className={`flex-1 cursor-pointer rounded-xl border px-4 py-2.5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-claude-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-900 ${
                         clockType === type
-                          ? "border-claude-300 bg-claude-50 text-claude-700"
-                          : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+                          ? "border-claude-300 bg-claude-50 text-claude-700 dark:border-claude-600 dark:bg-neutral-800 dark:text-claude-300"
+                          : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 dark:border-neutral-600 dark:bg-neutral-800/60 dark:text-neutral-400 dark:hover:border-neutral-500"
                       }`}
                     >
                       {type === "analog"
@@ -358,10 +422,10 @@ export default function SettingsModal({
                             buttons[nextIdx].focus();
                           }
                         }}
-                        className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-claude-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+                        className={`flex-1 cursor-pointer rounded-xl border px-4 py-2.5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-claude-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-900 ${
                           clockFormat === fmt
-                            ? "border-claude-300 bg-claude-50 text-claude-700"
-                            : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+                            ? "border-claude-300 bg-claude-50 text-claude-700 dark:border-claude-600 dark:bg-neutral-800 dark:text-claude-300"
+                            : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 dark:border-neutral-600 dark:bg-neutral-800/60 dark:text-neutral-400 dark:hover:border-neutral-500"
                         }`}
                       >
                         {fmt === "12h"
@@ -376,8 +440,8 @@ export default function SettingsModal({
           )}
 
           {/* Session Settings */}
-          <div className="border-t border-slate-100 pt-4">
-            <label className="mb-2 block text-xs font-semibold text-slate-500">
+          <div className="border-t border-slate-100 pt-4 dark:border-neutral-800">
+            <label className="mb-2 block text-xs font-semibold text-slate-500 dark:text-neutral-400">
               {t("settings.sessionBehavior")}
             </label>
             <div
@@ -392,19 +456,21 @@ export default function SettingsModal({
                   handleAutoFollowToggle();
                 }
               }}
-              className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white p-3 transition-colors hover:border-slate-300 hover:bg-slate-50"
+              className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white p-3 transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-neutral-600 dark:bg-neutral-800/60 dark:hover:border-neutral-500 dark:hover:bg-neutral-800"
             >
               <div>
-                <p className="text-sm font-medium text-slate-700">
+                <p className="text-sm font-medium text-slate-700 dark:text-neutral-200">
                   {t("settings.autoFollow")}
                 </p>
-                <p className="text-slate-500 text-xs mt-0.5">
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-neutral-400">
                   {t("settings.autoFollowDesc")}
                 </p>
               </div>
               <div
-                className={`w-11 h-6 rounded-full relative transition-colors ${
-                  autoFollowNewSessions ? "bg-claude-500" : "bg-slate-300"
+                className={`relative h-6 w-11 rounded-full transition-colors ${
+                  autoFollowNewSessions
+                    ? "bg-claude-500"
+                    : "bg-slate-300 dark:bg-neutral-600"
                 }`}
               >
                 <div
@@ -417,8 +483,8 @@ export default function SettingsModal({
           </div>
 
           {/* Attention Settings */}
-          <div className="border-t border-slate-100 pt-4">
-            <label className="mb-2 block text-xs font-semibold text-slate-500">
+          <div className="border-t border-slate-100 pt-4 dark:border-neutral-800">
+            <label className="mb-2 block text-xs font-semibold text-slate-500 dark:text-neutral-400">
               {t("settings.toastFilters")}
             </label>
             <div className="space-y-2">
@@ -460,8 +526,10 @@ export default function SettingsModal({
           </div>
 
           {!STALKER_HIDE_LEGACY_OFFICE && (
-            <div className="border-t border-slate-100 pt-4">
-              <p className="text-slate-500 text-xs">{t("settings.clockTip")}</p>
+            <div className="border-t border-slate-100 pt-4 dark:border-neutral-800">
+              <p className="text-xs text-slate-500 dark:text-neutral-400">
+                {t("settings.clockTip")}
+              </p>
             </div>
           )}
         </div>

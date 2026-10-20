@@ -166,3 +166,37 @@ def test_session_list_includes_label_field():
     assert list_response.status_code == 200
     session = next(s for s in list_response.json() if s["id"] == session_id)
     assert "label" in session
+
+
+def test_get_session_state_snapshot():
+    session_id = _seed_session()
+    response = client.get(f"/api/v1/sessions/{session_id}/state")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["sessionId"] == session_id
+    assert "boss" in body
+
+
+def _seed_session_from(source: str | None) -> str:
+    sid = f"test-{uuid4()}"
+    data = {"source": source} if source else {}
+    event = EventAdapter.validate_python(
+        {
+            "event_type": EventType.SESSION_START,
+            "session_id": sid,
+            "timestamp": datetime.now(UTC),
+            "data": data,
+        }
+    )
+    asyncio.run(event_processor.process_event(event))
+    return sid
+
+
+def test_session_list_reports_which_agent_produced_it():
+    cursor_id = _seed_session_from("cursor")
+    claude_id = _seed_session_from(None)
+
+    sessions = {s["id"]: s for s in client.get("/api/v1/sessions").json()}
+
+    assert sessions[cursor_id]["agentSource"] == "cursor"
+    assert sessions[claude_id]["agentSource"] == "claude"

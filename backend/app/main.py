@@ -18,6 +18,10 @@ from sqlalchemy import delete, select, update
 from app.api.middleware import ApiKeyMiddleware, LocalhostOnlyMiddleware
 from app.api.routes import events, floors, preferences, sessions, websockets
 from app.config import get_settings
+from app.core.cursor_transcript_poller import (
+    get_cursor_transcript_poller,
+    init_cursor_transcript_poller,
+)
 from app.core.event_processor import EventProcessor, get_event_processor
 from app.core.summary_service import get_summary_service
 from app.db.database import Base, get_engine
@@ -79,6 +83,12 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
 
     git_service.start()
 
+    if settings.STALKER_CURSOR_INGEST:
+        init_cursor_transcript_poller(get_event_processor().process_event)
+        poller = get_cursor_transcript_poller()
+        if poller is not None:
+            await poller.start()
+
     # Periodic idle-session eviction (ARC-015). Drops in-memory StateMachine
     # instances that have not seen activity for ``SESSION_IDLE_EVICT_SECONDS``
     # (default 6h); state is replayable from the DB on next access. Mirrors
@@ -95,6 +105,9 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
     yield
 
     # Cancel any pending debounced overview broadcast so shutdown is clean.
+    cursor_stop = get_cursor_transcript_poller()
+    if cursor_stop is not None:
+        await cursor_stop.stop()
     await get_event_processor().shutdown()
     idle_evictor.cancel()
     with contextlib.suppress(asyncio.CancelledError):
@@ -188,6 +201,9 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
+    # Next.js may bind to 3001+ when 3000 is taken; Starlette rejects WS upgrades
+    # with 403 when Origin is not listed (browser shows "Offline" in Stalker).
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
