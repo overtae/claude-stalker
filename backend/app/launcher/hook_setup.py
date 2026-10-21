@@ -218,3 +218,41 @@ def unregister_app_hooks(app_marker: str) -> int:
         settings["hooks"] = hooks
         mh.save_settings(settings_path, settings)
     return removed
+
+
+# ---------------------------------------------------------------------------
+# Codex ($CODEX_HOME/hooks.json) — same hook contract, tagged --source codex
+# ---------------------------------------------------------------------------
+
+
+def register_codex_hooks() -> str:
+    """CLI install: point Codex at ``claude-office-hook``.
+
+    Returns "no-codex" (Codex not installed), "unchanged" or "registered".
+    Codex runs new hooks only after the user trusts them via ``/hooks``.
+    """
+    return str(_manage_hooks().install_codex_hooks(HOOK_CMD))
+
+
+def register_app_codex_hooks(hook_cmd: str, guard: str = "") -> str:
+    """Desktop app: like :func:`register_app_hooks`, for Codex.
+
+    Leaves Codex alone ("cli") when the CLI hook is already registered there.
+    """
+    mh = _manage_hooks()
+    path: Path = mh.get_codex_home() / "hooks.json"
+    if path.is_file():
+        config: dict[str, Any] = mh.load_settings(path)
+        hooks: dict[str, list[Any]] = config.get("hooks", {})
+        if any(
+            CLI_HOOK_MARKER in cmd and mh.CODEX_SOURCE_FLAG in cmd
+            for entries in hooks.values()
+            for cmd in _commands(entries)
+        ):
+            return "cli"
+    return str(mh.install_codex_hooks(hook_cmd, guard))
+
+
+def unregister_app_codex_hooks(app_marker: str) -> int:
+    """Remove only the desktop app's Codex entries."""
+    return int(_manage_hooks().uninstall_codex_hooks(marker=app_marker))

@@ -86,3 +86,69 @@ def test_save_settings_preserves_oldest_backup_across_runs(tmp_path: Path) -> No
 def test_load_settings_returns_empty_for_missing_file(tmp_path: Path) -> None:
     """A fresh install (no settings.json) is still allowed: returns {}."""
     assert manage_hooks.load_settings(_settings_path(tmp_path)) == {}
+
+
+# --- Codex (~/.codex/hooks.json) ---------------------------------------------
+
+
+@pytest.fixture
+def codex_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    home = tmp_path / ".codex"
+    home.mkdir()
+    monkeypatch.setenv("CODEX_HOME", str(home))
+    return home
+
+
+def _codex_commands(home: Path) -> list[str]:
+    data = json.loads((home / "hooks.json").read_text(encoding="utf-8"))
+    return [h["command"] for es in data["hooks"].values() for e in es for h in e["hooks"]]
+
+
+def test_codex_install_registers_every_event_with_source_flag(codex_home: Path) -> None:
+    status = manage_hooks.install_codex_hooks("claude-office-hook")
+
+    commands = _codex_commands(codex_home)
+    assert status == "registered"
+    assert "claude-office-hook --source codex pre_tool_use" in commands
+    assert "claude-office-hook --source codex stop" in commands
+    assert len(commands) == len(manage_hooks.CODEX_HOOK_TYPES)
+
+
+def test_codex_install_is_idempotent_and_keeps_other_hooks(codex_home: Path) -> None:
+    (codex_home / "hooks.json").write_text(
+        json.dumps({"hooks": {"Stop": [{"hooks": [{"type": "command", "command": "mine"}]}]}}),
+        encoding="utf-8",
+    )
+    manage_hooks.install_codex_hooks("claude-office-hook")
+
+    assert manage_hooks.install_codex_hooks("claude-office-hook") == "unchanged"
+    assert "mine" in _codex_commands(codex_home)
+
+
+def test_codex_install_replaces_our_old_command(codex_home: Path) -> None:
+    manage_hooks.install_codex_hooks('"/Old/Claude Stalker" hook')
+    manage_hooks.install_codex_hooks('"/New/Claude Stalker" hook')
+
+    commands = _codex_commands(codex_home)
+    assert not any("/Old/" in c for c in commands)
+    assert len(commands) == len(manage_hooks.CODEX_HOOK_TYPES)
+
+
+def test_codex_install_skips_when_codex_is_not_installed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path / "missing"))
+
+    assert manage_hooks.install_codex_hooks("claude-office-hook") == "no-codex"
+    assert not (tmp_path / "missing").exists()
+
+
+def test_codex_uninstall_removes_only_ours(codex_home: Path) -> None:
+    manage_hooks.install_codex_hooks("claude-office-hook")
+    data = json.loads((codex_home / "hooks.json").read_text(encoding="utf-8"))
+    data["hooks"]["Stop"].append({"hooks": [{"type": "command", "command": "mine"}]})
+    (codex_home / "hooks.json").write_text(json.dumps(data), encoding="utf-8")
+
+    manage_hooks.uninstall_codex_hooks()
+
+    assert _codex_commands(codex_home) == ["mine"]

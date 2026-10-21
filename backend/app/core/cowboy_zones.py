@@ -32,17 +32,35 @@ _ZONE_LABELS_KO: dict[CowboyZone, str] = {
     CowboyZone.BOSS_DESK: "보스 자리",
 }
 
-_READ_TOOLS = frozenset({"Read", "Glob", "Grep", "LS"})
-_DEV_TOOLS = frozenset({"Edit", "Write", "NotebookEdit"})
-_SERVER_TOOLS = frozenset({"Bash", "KillShell", "TaskOutput"})
+# Claude Code names first, then Cursor (agent transcripts) and Codex (hooks).
+_READ_TOOLS = frozenset(
+    {
+        "Read", "Glob", "Grep", "LS",
+        "SemanticSearch", "ReadLints", "FileSearch",
+        "read_file", "list_dir", "grep_files", "view_image",
+    }
+)  # fmt: skip
+_DEV_TOOLS = frozenset(
+    {"Edit", "Write", "NotebookEdit", "StrReplace", "Delete", "EditNotebook", "apply_patch"}
+)
+_SERVER_TOOLS = frozenset(
+    {
+        "Bash", "KillShell", "TaskOutput",
+        "Shell",
+        "shell", "exec_command", "local_shell", "unified_exec", "write_stdin",
+    }
+)  # fmt: skip
 _RESEARCH_TOOLS = frozenset(
     {
         "WebFetch",
         "WebSearch",
         "mcp__",
+        "web_search",
     }
 )
-_MEETING_TOOLS = frozenset({"EnterPlanMode", "ExitPlanMode", "TodoWrite", "TaskCreate"})
+_MEETING_TOOLS = frozenset(
+    {"EnterPlanMode", "ExitPlanMode", "TodoWrite", "TaskCreate", "update_plan"}
+)
 _USER_TOOLS = frozenset({"AskUserQuestion"})
 
 

@@ -28,3 +28,33 @@ def test_zone_labels_ko() -> None:
 def test_cowboy_agent_colors() -> None:
     assert cowboy_agent_color("explore") == "#22C55E"
     assert cowboy_agent_color("plan") == "#A855F7"
+
+
+# --- Codex / Cursor tool names land in the same rooms as Claude's -----------
+
+import pytest  # noqa: E402
+
+
+@pytest.mark.parametrize(
+    ("tool", "zone"),
+    [
+        # Codex
+        ("shell", CowboyZone.SERVER),
+        ("exec_command", CowboyZone.SERVER),
+        ("local_shell", CowboyZone.SERVER),
+        ("apply_patch", CowboyZone.DEV),
+        ("read_file", CowboyZone.ARCHIVE),
+        ("list_dir", CowboyZone.ARCHIVE),
+        ("grep_files", CowboyZone.ARCHIVE),
+        ("web_search", CowboyZone.RESEARCH),
+        ("update_plan", CowboyZone.MEETING),
+        # Cursor
+        ("StrReplace", CowboyZone.DEV),
+        ("Delete", CowboyZone.DEV),
+        ("Shell", CowboyZone.SERVER),
+        ("SemanticSearch", CowboyZone.ARCHIVE),
+        ("ReadLints", CowboyZone.ARCHIVE),
+    ],
+)
+def test_other_agents_tools_map_to_rooms(tool: str, zone: CowboyZone) -> None:
+    assert zone_for_tool(tool) == zone

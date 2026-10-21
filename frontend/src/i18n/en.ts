@@ -295,6 +295,11 @@ const en = {
   "attention.commandBar.toggleObstacles": "Toggle Obstacles",
   "attention.commandBar.noResults": "No matching commands",
   "attention.popup.focusTerminal": "Focus Terminal",
+  "attention.focus.unauthorized":
+    "This tab has no launch token (or the backend restarted). Reopen the office from the ?token= link in the backend log, or from the tray's Open office.",
+  "attention.focus.failed": "Focus terminal failed: {status}",
+  "attention.focus.unreachable":
+    "Cannot reach backend — is the server running?",
   "attention.popup.close": "Close",
   "attention.popup.state": "State",
   "attention.popup.task": "Task",

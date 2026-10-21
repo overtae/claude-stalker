@@ -47,19 +47,19 @@ const TEXT_FIELDS: {
   {
     key: "prompt",
     label: "eventDetail.userPrompt",
-    tone: "bg-claude-50 border-claude-100 text-slate-800",
+    tone: "bg-claude-50 border-claude-100 text-slate-800 dark:bg-claude-950/35 dark:border-claude-800/40 dark:text-neutral-200",
   },
   {
     key: "thinking",
     label: "eventDetail.thinking",
-    tone: "bg-slate-50 border-slate-100 italic text-slate-500",
+    tone: "bg-slate-50 border-slate-100 italic text-slate-500 dark:bg-neutral-800/50 dark:border-neutral-700 dark:text-neutral-400",
   },
   { key: "message", label: "eventDetail.message" },
   { key: "resultSummary", label: "eventDetail.resultSummary" },
   {
     key: "errorType",
     label: "eventDetail.errorType",
-    tone: "bg-rose-50 border-rose-100 text-rose-700",
+    tone: "bg-rose-50 border-rose-100 text-rose-700 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-300",
   },
 ];
 
@@ -72,7 +72,9 @@ function Field({
 }): ReactNode {
   return (
     <section>
-      <h3 className="mb-1 text-[11px] font-semibold text-slate-400">{label}</h3>
+      <h3 className="mb-1 text-[11px] font-semibold text-slate-400 dark:text-neutral-500">
+        {label}
+      </h3>
       {children}
     </section>
   );
@@ -93,7 +95,7 @@ export function EventDetailModal({ event, onClose }: EventDetailModalProps) {
       size="lg"
       title={t(`eventType.${event.type}` as TranslationKey)}
       titleAdornment={
-        <span className="rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-slate-500">
+        <span className="rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-slate-500 dark:bg-neutral-800 dark:text-neutral-400">
           {event.type}
         </span>
       }
@@ -108,15 +110,19 @@ export function EventDetailModal({ event, onClose }: EventDetailModalProps) {
       }
     >
       <div className="space-y-4">
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 rounded-2xl bg-slate-50 px-4 py-3 text-xs">
-          <dt className="text-slate-400">{t("eventDetail.time")}</dt>
-          <dd className="tabular-nums text-slate-700">
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 rounded-2xl bg-slate-50 px-4 py-3 text-xs dark:bg-neutral-800/60">
+          <dt className="text-slate-400 dark:text-neutral-500">
+            {t("eventDetail.time")}
+          </dt>
+          <dd className="tabular-nums text-slate-700 dark:text-neutral-200">
             {format(event.timestamp, TIME_FORMAT[language])}
           </dd>
           {event.agentId && (
             <>
-              <dt className="text-slate-400">{t("eventDetail.actor")}</dt>
-              <dd className="truncate text-slate-700">
+              <dt className="text-slate-400 dark:text-neutral-500">
+                {t("eventDetail.actor")}
+              </dt>
+              <dd className="truncate text-slate-700 dark:text-neutral-200">
                 {event.agentId === MAIN_AGENT_ID ? (
                   mainAgent.name
                 ) : (
@@ -128,14 +134,18 @@ export function EventDetailModal({ event, onClose }: EventDetailModalProps) {
         </dl>
 
         <Field label={t("eventDetail.summary")}>
-          <p className="text-sm text-slate-800">{event.summary}</p>
+          <p className="text-sm text-slate-800 dark:text-neutral-100">
+            {event.summary}
+          </p>
         </Field>
 
         {fields.map(({ key, label, tone, mono }) => (
           <Field key={key} label={t(label)}>
             <p
               className={`whitespace-pre-wrap break-words text-[13px] leading-relaxed ${
-                tone ? `rounded-xl border px-3 py-2 ${tone}` : "text-slate-700"
+                tone
+                  ? `rounded-xl border px-3 py-2 ${tone}`
+                  : "text-slate-700 dark:text-neutral-300"
               } ${mono ? "font-mono" : ""}`}
             >
               {String(detail[key])}
@@ -145,14 +155,14 @@ export function EventDetailModal({ event, onClose }: EventDetailModalProps) {
 
         {detail.toolInput && (
           <Field label={t("eventDetail.toolInput")}>
-            <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-xl border border-slate-100 bg-slate-50 p-3 font-mono text-[11px] leading-relaxed text-slate-600">
+            <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-xl border border-slate-100 bg-slate-50 p-3 font-mono text-[11px] leading-relaxed text-slate-600 dark:border-neutral-700 dark:bg-neutral-950/50 dark:text-neutral-300">
               {JSON.stringify(detail.toolInput, null, 2)}
             </pre>
           </Field>
         )}
 
         {!hasDetail && (
-          <p className="py-2 text-center text-xs text-slate-400">
+          <p className="py-2 text-center text-xs text-slate-400 dark:text-neutral-500">
             {t("eventDetail.noDetail")}
           </p>
         )}

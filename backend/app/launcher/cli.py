@@ -15,6 +15,7 @@ from app.launcher.hook_setup import (
     CONFIG_FILE,
     ensure_config,
     ensure_hook_tool,
+    register_codex_hooks,
     register_hooks,
 )
 from app.launcher.server import (
@@ -25,6 +26,7 @@ from app.launcher.server import (
     events_url,
     is_stalker_ui,
     port_in_use,
+    running_launch_url,
     wait_until_healthy,
 )
 
@@ -52,6 +54,11 @@ def _setup_hooks(port: int, reinstall: bool) -> None:
     print(f"  {'✓' if result.installed_tool else '·'} {result.message}")
     register_hooks()
     print("  ✓ hooks registered in ~/.claude/settings.json")
+    codex = register_codex_hooks()
+    if codex == "registered":
+        print("  ✓ Codex hooks registered — open /hooks in Codex once and trust them")
+    elif codex == "unchanged":
+        print("  · Codex hooks already registered")
     if result.installed_tool:
         print("  ! restart Claude Code once so it picks up the new hooks")
 
@@ -69,7 +76,7 @@ def main() -> None:
         if is_stalker_ui(args.port):
             print(f"Claude Stalker is already running at {url}")
             if not args.no_browser:
-                webbrowser.open(url)
+                webbrowser.open(running_launch_url(args.port))
             return
         raise SystemExit(f"Port {args.port} is busy. Try: claude-stalker --port {args.port + 1}")
 

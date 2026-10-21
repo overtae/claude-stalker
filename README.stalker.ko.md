@@ -33,6 +33,17 @@ make dev-tmux
 - UI: http://localhost:3000  
 - **Claude Code**: `make hooks-install` 후 훅이 `POST /api/v1/events`로 이벤트를 보냅니다.  
 - **Cursor IDE**: 백엔드가 `~/.cursor/projects/.../agent-transcripts/**/*.jsonl`을 주기적으로 tail 해서 같은 이벤트 스트림으로 반영합니다 (훅 불필요).
+- **Codex CLI**: `make hooks-install`(또는 데스크톱 앱 실행) 시 `~/.codex/hooks.json`에도 같은 훅이 `--source codex`로 등록됩니다.
+
+### Codex CLI
+
+Codex는 Claude Code와 같은 훅 계약(`session_id`, `tool_name`, `tool_input` …)을 쓰므로 같은 `claude-office-hook`을 재사용합니다.
+
+1. `make hooks-install` — `~/.codex`가 있을 때만 `$CODEX_HOME/hooks.json`에 등록합니다 (`CODEX_HOME` 지정 시 그 경로).
+2. **Codex에서 `/hooks`를 열어 한 번 신뢰(trust)** 해야 훅이 실제로 실행됩니다.
+3. 맵 헤더와 세션 목록에 `❯ Codex` 칩이 뜨고, 보스 캐릭터가 Codex 색으로 바뀝니다.
+
+해제: `make hooks-uninstall` (Codex 항목도 함께 제거) · 데스크톱 앱은 트레이의 **연결 해제**.
 
 ### Cursor IDE
 
@@ -52,6 +63,7 @@ export STALKER_CURSOR_TRANSCRIPT_ROOTS="$HOME/.cursor,/custom/transcripts"
 | 증상 | 원인 | 조치 |
 |------|------|------|
 | 맵 우측 상단 **오프라인**, 세션은 보임 | 프론트가 잘못된 포트의 백엔드에 WS 연결 | `Claude Stalker.app` 종료 후 `make dev-tmux` 재시작, 브라우저 새로고침 |
+| Codex 세션이 안 보임 | 훅을 아직 신뢰하지 않음 | Codex에서 `/hooks` → 신뢰 후 새 턴 보내기 |
 | Cursor 채팅 후에도 활동 없음 | 백엔드 기동 **이후** append 된 JSONL만 ingest | 백엔드 켠 뒤 Cursor에서 한 턴 더 보내기 |
 
 ## cowboy76 기능 체크리스트

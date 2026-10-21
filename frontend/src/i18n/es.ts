@@ -297,6 +297,11 @@ const es: Record<TranslationKey, string> = {
   "attention.commandBar.toggleObstacles": "Alternar Obstáculos",
   "attention.commandBar.noResults": "Sin comandos coincidentes",
   "attention.popup.focusTerminal": "Enfocar Terminal",
+  "attention.focus.unauthorized":
+    "Esta pestaña no tiene el token de inicio (o el backend se reinició). Vuelve a abrir la oficina desde el enlace ?token= del log del backend.",
+  "attention.focus.failed": "No se pudo enfocar la terminal: {status}",
+  "attention.focus.unreachable":
+    "No se puede conectar con el backend — ¿está el servidor en marcha?",
   "attention.popup.close": "Cerrar",
   "attention.popup.state": "Estado",
   "attention.popup.task": "Tarea",

@@ -10,10 +10,13 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+from app.launch_token import read_token
+
 DEFAULT_PORT = 8000
 HOST = "127.0.0.1"
 #: Persistent home for the database and logs — package caches can be wiped.
 DATA_DIR = Path.home() / ".claude-stalker"
+LAUNCH_TOKEN_FILE = DATA_DIR / "launch-token"
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 STARTUP_TIMEOUT_S = 30.0
 #: How far past the preferred port to look for a free one.
@@ -65,6 +68,14 @@ def configure_backend_env(port: int) -> None:
     os.environ["BACKEND_CORS_ORIGINS"] = json.dumps(origins)
     os.environ.setdefault("LOG_RICH_TRACEBACKS", "0")
     os.environ.setdefault("STALKER_LOG_LEVEL", "WARNING")
+    os.environ.setdefault("STALKER_LAUNCH_TOKEN_FILE", str(LAUNCH_TOKEN_FILE))
+
+
+def running_launch_url(port: int) -> str:
+    """URL for an instance that is already up, carrying its token when we know it."""
+    url = f"http://{HOST}:{port}"
+    token = read_token(LAUNCH_TOKEN_FILE)
+    return f"{url}/?token={token}" if token else url
 
 
 def events_url(port: int) -> str:

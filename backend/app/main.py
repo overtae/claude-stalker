@@ -198,6 +198,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(LocalhostOnlyMiddleware)
+app.add_middleware(ApiKeyMiddleware)
+# Added last = outermost, so CORS headers also land on the 401/403 replies the
+# auth middlewares short-circuit with. Without them the browser hides the
+# status and the UI can only report "cannot reach backend".
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
@@ -208,9 +213,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app.add_middleware(LocalhostOnlyMiddleware)
-app.add_middleware(ApiKeyMiddleware)
 
 app.include_router(events.router, prefix=f"{settings.API_V1_STR}")
 app.include_router(floors.router, prefix=f"{settings.API_V1_STR}")

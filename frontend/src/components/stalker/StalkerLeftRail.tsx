@@ -88,7 +88,7 @@ export function StalkerLeftRail({
         </span>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pb-2 pr-0.5">
+      <div className="min-h-0 flex-1 space-y-2 overflow-x-hidden overflow-y-auto px-1 py-0.5 pb-2">
         {sessionsLoading && floors.length === 0 && (
           <p className="px-2 text-xs text-slate-500">
             {t("stalker.sessionsLoading")}
@@ -232,7 +232,7 @@ function ActiveFloorCard({
   const others = floor.sessions.filter((s) => s.id !== sessionId);
 
   return (
-    <div className="rounded-2xl border border-claude-300/80 bg-white px-3 py-2.5 shadow-sm ring-2 ring-claude-100 dark:border-claude-600/50 dark:bg-neutral-900 dark:ring-claude-950">
+    <div className="rounded-2xl border border-claude-300/50 bg-white px-3 py-2.5 shadow-sm dark:border-neutral-600/80 dark:bg-neutral-900 dark:shadow-none">
       <FloorHeader floor={floor} now={now} isActive={true} />
       <div className="mt-2.5 border-t border-slate-100 pt-2 dark:border-neutral-800">
         <button
@@ -241,19 +241,23 @@ function ActiveFloorCard({
           aria-pressed={autoFollow}
           className={`flex w-full cursor-pointer items-center gap-1.5 rounded-lg px-1.5 py-1 text-left text-xs transition-colors ${
             autoFollow
-              ? "text-claude-700"
-              : "text-slate-500 hover:text-slate-700"
+              ? "text-claude-700 dark:text-claude-400/90"
+              : "text-slate-500 hover:text-slate-700 dark:text-neutral-400 dark:hover:text-neutral-200"
           }`}
         >
           <RefreshCw
             size={13}
-            className={autoFollow ? "text-claude-500" : "text-slate-400"}
+            className={
+              autoFollow
+                ? "text-claude-500 dark:text-claude-400/80"
+                : "text-slate-400 dark:text-neutral-500"
+            }
             aria-hidden
           />
           {t("stalker.autoFollow")}
         </button>
 
-        <ul className="mt-1 max-h-[42vh] space-y-0.5 overflow-y-auto">
+        <ul className="mt-1 max-h-[42vh] space-y-0.5 overflow-y-auto pr-0.5">
           {current && (
             <SessionRow
               session={current}
@@ -299,14 +303,14 @@ function SessionRow({
         aria-current={isCurrent ? "true" : undefined}
         className={`flex w-full items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs transition-colors ${
           isCurrent
-            ? "cursor-default bg-slate-100 font-semibold text-slate-800 dark:bg-neutral-800 dark:text-neutral-100"
-            : "cursor-pointer text-slate-600 hover:bg-slate-50 dark:text-neutral-300 dark:hover:bg-neutral-800/80"
+            ? "cursor-default bg-slate-100 font-semibold text-slate-800 dark:bg-neutral-800/50 dark:text-neutral-200"
+            : "cursor-pointer text-slate-600 hover:bg-slate-50 dark:text-neutral-400 dark:hover:bg-neutral-800/40"
         }`}
       >
         {isCurrent && (
           <Pin
             size={12}
-            className="shrink-0 rotate-45 text-claude-600"
+            className="shrink-0 rotate-45 text-claude-600 dark:text-claude-400/80"
             aria-hidden
           />
         )}
@@ -317,8 +321,8 @@ function SessionRow({
         <span
           className={`shrink-0 text-[10px] ${
             live && isCurrent
-              ? "font-semibold text-claude-600"
-              : "text-slate-400"
+              ? "font-semibold text-claude-600 dark:text-claude-400/80"
+              : "text-slate-400 dark:text-neutral-500"
           }`}
         >
           {live && isCurrent

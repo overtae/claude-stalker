@@ -133,6 +133,10 @@ echo "Configuring Claude settings..."
 # Pass the hook command name (not full path) for cross-platform compatibility
 uv run -p 3.14 "$HOOKS_DIR/manage_hooks.py" install --hook-cmd "$HOOK_CMD"
 
+# Codex uses the same hook contract; registered only if Codex is installed.
+# Codex runs new hooks only after you trust them once: open Codex and run /hooks.
+uv run -p 3.14 "$HOOKS_DIR/manage_hooks.py" install-codex --hook-cmd "$HOOK_CMD"
+
 echo ""
 echo "Done! Please restart Claude Code to apply changes."
 echo ""

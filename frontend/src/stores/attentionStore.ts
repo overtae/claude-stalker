@@ -2,8 +2,12 @@
 
 import { create } from "zustand";
 import type { EventType } from "@/types";
+import { getTranslation } from "@/i18n";
 import { usePreferencesStore } from "@/stores/preferencesStore";
 import { apiFetch } from "@/utils/api";
+
+/** Missing or stale per-launch token (the backend rotates it on restart). */
+const HTTP_UNAUTHORIZED = 401;
 
 // ============================================================================
 // TYPES
@@ -176,22 +180,30 @@ export const useAttentionStore = create<AttentionState>()((set, get) => ({
   closeFocusPopup: () => set({ focusPopup: null }),
 
   focusAgentTerminal: async (sessionId, _agentId) => {
+    const t = getTranslation(usePreferencesStore.getState().language);
     try {
       const res = await apiFetch(`/api/v1/sessions/${sessionId}/focus`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
       });
-      if (!res.ok) {
+      if (res.status === HTTP_UNAUTHORIZED) {
         get().processEvent({
           type: "error",
-          message: `Focus terminal failed: ${res.statusText}`,
+          message: t("attention.focus.unauthorized"),
+        });
+      } else if (!res.ok) {
+        get().processEvent({
+          type: "error",
+          message: t("attention.focus.failed", {
+            status: `${res.status} ${res.statusText}`.trim(),
+          }),
         });
       }
     } catch {
       get().processEvent({
         type: "error",
-        message: "Cannot reach backend — is the server running?",
+        message: t("attention.focus.unreachable"),
       });
     }
     get().closeFocusPopup();

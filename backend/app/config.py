@@ -2,8 +2,11 @@ import importlib.metadata
 import secrets
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from app.launch_token import load_or_create_token
 
 _BACKEND_DIR = Path(__file__).parent.parent.resolve()
 
@@ -117,6 +120,10 @@ class Settings(BaseSettings):
     # endpoints always require an API key even in the default configuration.
     _auto_api_key: str = secrets.token_hex(32)
 
+    # Optional file that keeps the auto token stable across restarts (dev
+    # --reload, desktop relaunch). Empty = a fresh token every launch.
+    STALKER_LAUNCH_TOKEN_FILE: str = ""
+
     # Rich tracebacks render local variables and full filesystem paths into logs.
     # Useful in development; disable for shared/production deployments (SEC-006).
     LOG_RICH_TRACEBACKS: bool = True
@@ -125,6 +132,11 @@ class Settings(BaseSettings):
     # (compose: LOCALHOST_ONLY=0): every request arrives from the bridge gateway,
     # so the loopback boundary moves to the host port binding (127.0.0.1:8050).
     LOCALHOST_ONLY: bool = True
+
+    def model_post_init(self, context: Any, /) -> None:
+        if self.STALKER_LAUNCH_TOKEN_FILE:
+            path = Path(self.STALKER_LAUNCH_TOKEN_FILE).expanduser()
+            self._auto_api_key = load_or_create_token(path)
 
     @property
     def effective_api_key(self) -> str:

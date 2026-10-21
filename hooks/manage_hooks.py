@@ -218,6 +218,114 @@ def uninstall_hooks(_hook_cmd: str, dry_run: bool = False) -> None:
         print("No hooks found to remove.")
 
 
+# ---------------------------------------------------------------------------
+# Codex — same hook contract, registered in $CODEX_HOME/hooks.json
+# ---------------------------------------------------------------------------
+
+CODEX_HOOK_TYPES = [
+    "SessionStart",
+    "SessionEnd",
+    "UserPromptSubmit",
+    "PreToolUse",
+    "PostToolUse",
+    "PermissionRequest",
+    "PreCompact",
+    "Stop",
+    "SubagentStart",
+    "SubagentStop",
+]
+#: Every command we register for Codex carries this flag — it identifies ours.
+CODEX_SOURCE_FLAG = "--source codex"
+_CODEX_TOOL_EVENTS = {"PreToolUse", "PostToolUse", "PermissionRequest"}
+#: Seconds. Codex caps SessionEnd hooks at 3s.
+_CODEX_TIMEOUT = 5
+_CODEX_SESSION_END_TIMEOUT = 3
+
+
+def get_codex_home() -> Path:
+    return Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex")
+
+
+def create_codex_hook_config(hook_cmd: str, hook_type: str, guard: str = "") -> dict[str, Any]:
+    """One matcher group for a Codex event (``guard`` is appended, e.g. ``|| true``)."""
+    event_type = convert_camel_to_snake(hook_type)
+    handler = {
+        "type": "command",
+        "command": f"{hook_cmd} {CODEX_SOURCE_FLAG} {event_type}{guard}",
+        "timeout": _CODEX_SESSION_END_TIMEOUT if hook_type == "SessionEnd" else _CODEX_TIMEOUT,
+    }
+    entry: dict[str, Any] = {"hooks": [handler]}
+    if hook_type in _CODEX_TOOL_EVENTS:
+        entry["matcher"] = ".*"
+    return entry
+
+
+def _is_ours_codex(entry: Any) -> bool:
+    try:
+        return any(CODEX_SOURCE_FLAG in h.get("command", "") for h in entry.get("hooks", []))
+    except AttributeError:
+        return False
+
+
+def install_codex_hooks(hook_cmd: str, guard: str = "", dry_run: bool = False) -> str:
+    """Register (or re-point) our Codex hooks. Returns "no-codex", "unchanged" or "registered".
+
+    Codex runs new or changed hooks only after the user trusts them in
+    ``/hooks``; any of our older entries (another path) are replaced.
+    """
+    home = get_codex_home()
+    if not home.is_dir():
+        return "no-codex"
+    path = home / "hooks.json"
+    config = load_settings(path)
+    hooks: dict[str, list[Any]] = config.get("hooks", {})
+    changed = False
+    for hook_type in CODEX_HOOK_TYPES:
+        wanted = create_codex_hook_config(hook_cmd, hook_type, guard)
+        current = hooks.get(hook_type, [])
+        kept = [e for e in current if not _is_ours_codex(e) or e == wanted]
+        if wanted not in kept:
+            kept.append(wanted)
+        if kept != current:
+            hooks[hook_type] = kept
+            changed = True
+    if not changed:
+        return "unchanged"
+    config["hooks"] = hooks
+    if not dry_run:
+        save_settings(path, config)
+    return "registered"
+
+
+def uninstall_codex_hooks(dry_run: bool = False, marker: str | None = None) -> int:
+    """Remove our Codex hook entries; returns how many were removed.
+
+    ``marker`` narrows it to entries whose command also contains that text
+    (the desktop app removes only its own, not a CLI install).
+    """
+    path = get_codex_home() / "hooks.json"
+    if not path.is_file():
+        return 0
+    config = load_settings(path)
+    hooks: dict[str, list[Any]] = config.get("hooks", {})
+    removed = 0
+    for hook_type in list(hooks):
+        kept = [
+            e
+            for e in hooks[hook_type]
+            if not (_is_ours_codex(e) and (marker is None or marker in json.dumps(e)))
+        ]
+        removed += len(hooks[hook_type]) - len(kept)
+        if kept:
+            hooks[hook_type] = kept
+        else:
+            del hooks[hook_type]
+    if removed and not dry_run:
+        config["hooks"] = hooks
+        save_settings(path, config)
+    return removed
+
+
 def convert_camel_to_snake(name: str) -> str:
     import re
 
@@ -227,7 +335,11 @@ def convert_camel_to_snake(name: str) -> str:
 
 def main():
     parser = argparse.ArgumentParser(description="Manage Claude Office hooks.")
-    parser.add_argument("action", choices=["install", "uninstall"], help="Action to perform")
+    parser.add_argument(
+        "action",
+        choices=["install", "uninstall", "install-codex", "uninstall-codex"],
+        help="Action to perform",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Don't save changes")
     parser.add_argument("--hook-cmd", help="Path to claude-office-hook command", required=True)
 
@@ -237,6 +349,10 @@ def main():
         install_hooks(args.hook_cmd, args.dry_run)
     elif args.action == "uninstall":
         uninstall_hooks(args.hook_cmd, args.dry_run)
+    elif args.action == "install-codex":
+        print(f"Codex hooks: {install_codex_hooks(args.hook_cmd, dry_run=args.dry_run)}")
+    elif args.action == "uninstall-codex":
+        print(f"Codex hooks removed: {uninstall_codex_hooks(args.dry_run)}")
 
 
 if __name__ == "__main__":

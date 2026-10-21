@@ -297,6 +297,11 @@ const ptBR: Record<TranslationKey, string> = {
   "attention.commandBar.toggleObstacles": "Alternar Obstáculos",
   "attention.commandBar.noResults": "Nenhum comando encontrado",
   "attention.popup.focusTerminal": "Focar Terminal",
+  "attention.focus.unauthorized":
+    "Esta aba não tem o token de inicialização (ou o backend reiniciou). Reabra o escritório pelo link ?token= no log do backend.",
+  "attention.focus.failed": "Falha ao focar o terminal: {status}",
+  "attention.focus.unreachable":
+    "Não foi possível conectar ao backend — o servidor está rodando?",
   "attention.popup.close": "Fechar",
   "attention.popup.state": "Estado",
   "attention.popup.task": "Tarefa",

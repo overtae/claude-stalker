@@ -77,7 +77,7 @@ from app.models.sessions import ConversationEntry, GameState, HistoryEntry
 from app.services.git_service import git_service
 
 #: Producer tags that identify a non-Claude coding agent (persisted per session).
-AGENT_SOURCES = frozenset({"cursor", "opencode"})
+AGENT_SOURCES = frozenset({"cursor", "codex", "opencode"})
 
 logger = logging.getLogger(__name__)
 

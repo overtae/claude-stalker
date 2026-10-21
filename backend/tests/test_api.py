@@ -194,9 +194,29 @@ def _seed_session_from(source: str | None) -> str:
 
 def test_session_list_reports_which_agent_produced_it():
     cursor_id = _seed_session_from("cursor")
+    codex_id = _seed_session_from("codex")
     claude_id = _seed_session_from(None)
 
     sessions = {s["id"]: s for s in client.get("/api/v1/sessions").json()}
 
     assert sessions[cursor_id]["agentSource"] == "cursor"
+    assert sessions[codex_id]["agentSource"] == "codex"
     assert sessions[claude_id]["agentSource"] == "claude"
+
+
+def test_rejected_focus_still_carries_cors_headers():
+    """A 401 from the auth middleware must be readable by the browser UI.
+
+    Without CORS headers on the short-circuited reply, fetch() throws and the
+    UI can only say "cannot reach backend" instead of the real cause.
+    """
+    session_id = _seed_session()
+
+    response = client.post(
+        f"/api/v1/sessions/{session_id}/focus",
+        json={},
+        headers={"Origin": "http://localhost:3000"},
+    )
+
+    assert response.status_code == 401
+    assert response.headers["access-control-allow-origin"] == "http://localhost:3000"

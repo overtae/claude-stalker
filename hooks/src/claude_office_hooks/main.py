@@ -31,7 +31,7 @@ try:
 
     from claude_office_hooks.config import API_URL, TIMEOUT, get_api_key, load_config
     from claude_office_hooks.debug_logger import debug_log
-    from claude_office_hooks.event_mapper import map_event
+    from claude_office_hooks.event_mapper import hook_stdout_reply, map_event
 
     # Derived from package metadata; fallback covers the uninstalled case (ARC-021).
     try:
@@ -131,7 +131,19 @@ try:
                 "Example: --strip-prefixes '-Users-myuser-Repos-,-Users-myuser-'"
             ),
         )
+        parser.add_argument(
+            "--source",
+            choices=["codex"],
+            default=None,
+            help="Tag events from another agent that uses this hook contract (Codex).",
+        )
         args = parser.parse_args()
+
+        # Codex parses some hooks' stdout as JSON — reply before anything can fail.
+        reply = hook_stdout_reply(args.event_type, args.source)
+        if reply is not None and sys.__stdout__ is not None:
+            sys.__stdout__.write(reply)
+            sys.__stdout__.flush()
 
         if not args.event_type:
             real_stderr = sys.__stderr__
@@ -167,7 +179,9 @@ try:
             log_error(exc, "stdin read skipped")
 
         session_id = os.environ.get("CLAUDE_SESSION_ID", "default")
-        payload = map_event(args.event_type, raw_data, session_id, strip_prefixes)
+        payload = map_event(
+            args.event_type, raw_data, session_id, strip_prefixes, source=args.source
+        )
 
         if payload is None:
             if DEBUG:

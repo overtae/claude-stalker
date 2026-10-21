@@ -299,6 +299,11 @@ const ko: Record<TranslationKey, string> = {
   "attention.commandBar.toggleObstacles": "장애물 표시 전환",
   "attention.commandBar.noResults": "일치하는 명령이 없어요",
   "attention.popup.focusTerminal": "터미널로 이동",
+  "attention.focus.unauthorized":
+    "이 탭에 실행 토큰이 없어요 (또는 백엔드가 재시작됐어요). 백엔드 로그의 ?token= 링크나 트레이의 '사무실 열기'로 다시 열어 주세요.",
+  "attention.focus.failed": "터미널 이동 실패: {status}",
+  "attention.focus.unreachable":
+    "백엔드에 연결할 수 없어요 — 서버가 켜져 있나요?",
   "attention.popup.close": "닫기",
   "attention.popup.state": "상태",
   "attention.popup.task": "작업",

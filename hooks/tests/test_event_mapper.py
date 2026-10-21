@@ -178,3 +178,42 @@ class TestNativeSubagentStop:
         }
         result = map_event("subagent_stop", raw, SESSION_ID)
         assert result is None
+
+
+# --- Codex: same hook contract, tagged so the office can label the session ---
+
+from claude_office_hooks.event_mapper import hook_stdout_reply  # noqa: E402
+
+
+def test_codex_events_are_tagged_with_their_source() -> None:
+    raw = {
+        "session_id": "codex-1",
+        "cwd": "/tmp/proj",
+        "hook_event_name": "PreToolUse",
+        "tool_name": "apply_patch",
+        "tool_input": {"patch": "..."},
+        "tool_use_id": "call_1",
+        "turn_id": "t1",
+    }
+
+    payload = map_event("pre_tool_use", raw, "fallback", source="codex")
+
+    assert payload is not None
+    assert payload["session_id"] == "codex-1"
+    assert payload["data"]["source"] == "codex"
+    assert payload["data"]["tool_name"] == "apply_patch"
+
+
+def test_claude_events_stay_untagged() -> None:
+    payload = map_event("pre_tool_use", {"session_id": "c", "tool_name": "Read"}, "fb")
+
+    assert payload is not None
+    assert "source" not in payload["data"]
+
+
+def test_codex_stop_hooks_get_an_empty_json_reply() -> None:
+    # Codex expects JSON on stdout for Stop/SubagentStop; anything else is silent.
+    assert hook_stdout_reply("stop", "codex") == "{}"
+    assert hook_stdout_reply("subagent_stop", "codex") == "{}"
+    assert hook_stdout_reply("pre_tool_use", "codex") is None
+    assert hook_stdout_reply("stop", None) is None

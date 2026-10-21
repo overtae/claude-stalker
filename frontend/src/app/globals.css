@@ -146,6 +146,25 @@ body {
       scrollbar-color: #cbd5e1 transparent;
     }
   }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: #525252;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: #737373;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  @supports (-moz-appearance: none) {
+    .dark,
+    .dark * {
+      scrollbar-color: #525252 transparent;
+    }
+  }
 }
 
 /* Tour pulse animation */

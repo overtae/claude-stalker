@@ -3,7 +3,8 @@
  *
  * The backend no longer returns the API key over HTTP (SEC-001). Instead the
  * key is delivered out-of-band via a ?token= launch URL printed to the server
- * console; initApiKeyFromBrowser captures it into sessionStorage.
+ * console; initApiKeyFromBrowser captures it into localStorage so new tabs
+ * keep it (launchers persist the token across restarts, so it stays valid).
  */
 
 /**
@@ -40,7 +41,7 @@ export function getApiKey(): string | null {
   return _apiKey;
 }
 
-/** Read ?token= from the URL (stripping it from history) or sessionStorage. */
+/** Read ?token= from the URL (stripping it from history) or localStorage. */
 export function initApiKeyFromBrowser(): void {
   if (typeof window === "undefined") return;
   const params = new URLSearchParams(window.location.search);
@@ -48,9 +49,9 @@ export function initApiKeyFromBrowser(): void {
   if (token) {
     setApiKey(token);
     try {
-      sessionStorage.setItem(KEY_STORAGE, token);
+      localStorage.setItem(KEY_STORAGE, token);
     } catch {
-      // sessionStorage may be unavailable (private mode); key stays in-memory.
+      // localStorage may be unavailable (private mode); key stays in-memory.
     }
     params.delete("token");
     const qs = params.toString();
@@ -62,10 +63,10 @@ export function initApiKeyFromBrowser(): void {
     return;
   }
   try {
-    const stored = sessionStorage.getItem(KEY_STORAGE);
+    const stored = localStorage.getItem(KEY_STORAGE);
     if (stored) setApiKey(stored);
   } catch {
-    // sessionStorage unavailable; key remains unset until next ?token= intake.
+    // localStorage unavailable; key remains unset until next ?token= intake.
   }
 }
 

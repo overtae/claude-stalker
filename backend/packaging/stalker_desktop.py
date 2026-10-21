@@ -18,9 +18,12 @@ from typing import TYPE_CHECKING
 
 from app.launcher.hook_setup import (
     CONFIG_FILE,
+    MISSING_APP_GUARD,
     ensure_config,
     quote_command,
+    register_app_codex_hooks,
     register_app_hooks,
+    unregister_app_codex_hooks,
     unregister_app_hooks,
 )
 from app.launcher.server import (
@@ -32,6 +35,7 @@ from app.launcher.server import (
     find_free_port,
     is_stalker_ui,
     port_in_use,
+    running_launch_url,
     wait_until_healthy,
 )
 
@@ -44,6 +48,11 @@ APP_MARKER = APP_NAME
 HOOK_EXE = "claude-stalker-hook.exe"
 IS_WINDOWS = sys.platform == "win32"
 TRAY_ICON_PX = 64
+
+CODEX_TRUST_HINT = (
+    "Codex에도 연결했어요. Codex에서 /hooks 를 열어 한 번 신뢰(trust)해 주세요. / "
+    "Hooked into Codex too — open /hooks in Codex once and trust them."
+)
 
 RESTART_HINT = (
     "Claude Code에 연결했어요. Claude Code를 한 번 재시작해 주세요. / "
@@ -95,15 +104,22 @@ def run() -> None:
 
     port = _choose_port()
     if port is None:
-        webbrowser.open(f"http://{HOST}:{DEFAULT_PORT}")
+        webbrowser.open(running_launch_url(DEFAULT_PORT))
         return
 
     hook_cmd = hook_command()
     hook_status = register_app_hooks(hook_cmd, APP_MARKER) if hook_cmd else "missing"
+    # Codex shares the hook contract. No "|| true" guard on Windows, where the
+    # hook shell may be PowerShell (no `||` before PowerShell 7).
+    codex_status = (
+        register_app_codex_hooks(hook_cmd, "" if IS_WINDOWS else MISSING_APP_GUARD)
+        if hook_cmd
+        else "missing"
+    )
     # Only steer the hooks at our port when they're ours — a developer's own
     # `claude-office-hook` keeps talking to their dev server.
     ensure_config(CONFIG_FILE, events_url(port) if hook_status != "cli" else None)
-    print(f"[stalker] port={port} hooks={hook_status}")
+    print(f"[stalker] port={port} hooks={hook_status} codex={codex_status}")
 
     configure_backend_env(port)
     # Heavy imports only on the app path — hook mode must start fast.
@@ -122,7 +138,7 @@ def run() -> None:
         webbrowser.open(launch_url)
 
     def disconnect(icon: pystray.Icon, _item: object) -> None:
-        removed = unregister_app_hooks(APP_MARKER)
+        removed = unregister_app_hooks(APP_MARKER) + unregister_app_codex_hooks(APP_MARKER)
         _notify(icon, f"Claude Code 연결 해제 ({removed}) / Disconnected from Claude Code")
 
     def quit_app(icon: pystray.Icon, _item: object) -> None:
@@ -135,6 +151,8 @@ def run() -> None:
             open_office()
         if hook_status == "registered":
             _notify(icon, RESTART_HINT)
+        if codex_status == "registered":
+            _notify(icon, CODEX_TRUST_HINT)
 
     menu = pystray.Menu(
         pystray.MenuItem("사무실 열기 · Open office", open_office, default=True),
@@ -152,6 +170,7 @@ def main() -> None:
         run_hook([sys.argv[0], *sys.argv[2:]])
     if "--uninstall-hooks" in sys.argv:
         unregister_app_hooks(APP_MARKER)
+        unregister_app_codex_hooks(APP_MARKER)
         return
     run()
 

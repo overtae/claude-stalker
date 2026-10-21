@@ -312,6 +312,7 @@ def map_event(
     raw_data: dict[str, Any],
     session_id: str,
     strip_prefixes: list[str] | None = None,
+    source: str | None = None,
 ) -> dict[str, Any] | None:
     """Map raw Claude Code hook data to the backend Event model.
 
@@ -327,6 +328,8 @@ def map_event(
         raw_data: The raw JSON payload received from Claude Code on stdin.
         session_id: Fallback session ID when not present in *raw_data*.
         strip_prefixes: Path prefixes to remove when deriving the project name.
+        source: Producer tag for non-Claude agents sharing this hook contract
+            (``"codex"``); left out for Claude Code.
 
     Returns:
         A dict ready to POST to the backend, or None if the event should be
@@ -354,6 +357,9 @@ def map_event(
     # handler runs below.
     if "tool_use_id" in raw_data:
         data["tool_use_id"] = raw_data["tool_use_id"]
+
+    if source:
+        data["source"] = source
 
     task_list_id = os.environ.get("CLAUDE_CODE_TASK_LIST_ID")
     if task_list_id:
@@ -410,3 +416,18 @@ def map_event(
         return None
 
     return payload
+
+
+#: Hook events whose stdout Codex parses as JSON (empty output is rejected).
+_CODEX_JSON_REPLY_EVENTS = frozenset({"stop", "subagent_stop"})
+
+
+def hook_stdout_reply(event_type: str | None, source: str | None) -> str | None:
+    """What the hook must print on stdout, if anything.
+
+    Claude Code wants silence (stdout would leak into the conversation). Codex
+    expects a JSON object from Stop/SubagentStop; ``{}`` means "no decision".
+    """
+    if source == "codex" and event_type in _CODEX_JSON_REPLY_EVENTS:
+        return "{}"
+    return None
