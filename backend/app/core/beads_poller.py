@@ -29,6 +29,7 @@ from typing import Any, cast
 
 from app.config import get_settings
 from app.core.base_poller import BasePoller
+from app.core.process_utils import NO_WINDOW_FLAGS
 from app.models.common import TodoItem, TodoStatus
 
 logger = logging.getLogger(__name__)
@@ -73,6 +74,7 @@ def _run_bd_query(project_root: str) -> BeadsQueryResult:
             text=True,
             timeout=5,
             cwd=project_root,
+            creationflags=NO_WINDOW_FLAGS,
         )
         if result.returncode != 0:
             error_msg = result.stderr.strip()[:200] if result.stderr.strip() else "unknown error"

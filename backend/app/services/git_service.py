@@ -11,6 +11,7 @@ from pathlib import Path
 
 from app.config import get_settings
 from app.core.connection_manager import get_manager
+from app.core.process_utils import NO_WINDOW_FLAGS
 from app.models.git import ChangedFile, Commit, FileStatus, GitStatus
 
 logger = logging.getLogger(__name__)
@@ -60,6 +61,7 @@ class GitService:
                 capture_output=True,
                 text=True,
                 timeout=10,
+                creationflags=NO_WINDOW_FLAGS,
                 env={
                     **os.environ,
                     "GIT_CONFIG_GLOBAL": "/dev/null",

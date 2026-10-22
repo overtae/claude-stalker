@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.connection_manager import get_manager
 from app.core.event_processor import get_event_processor
+from app.core.process_utils import NO_WINDOW_FLAGS
 from app.db.database import get_db
 from app.db.models import EventRecord, SessionRecord, TaskRecord, UserPreference
 from app.services.git_service import git_service
@@ -399,6 +400,7 @@ async def focus_session(
                     stdin=asyncio.subprocess.PIPE,
                     stdout=asyncio.subprocess.DEVNULL,
                     stderr=asyncio.subprocess.DEVNULL,
+                    creationflags=NO_WINDOW_FLAGS,
                 )
                 await proc.communicate(input=clipboard_message.encode("utf-8"))
             except FileNotFoundError:
@@ -543,6 +545,7 @@ async def trigger_simulation() -> dict[str, str]:
         cwd=project_root,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
+        creationflags=NO_WINDOW_FLAGS,
     )
 
     return {"status": "success", "message": "Simulation started in background"}

@@ -9,6 +9,7 @@ from typing import Any
 import httpx
 
 from app.config import get_settings
+from app.core.process_utils import NO_WINDOW_FLAGS
 
 logger = logging.getLogger(__name__)
 
@@ -552,6 +553,7 @@ class SummaryService:
                 *argv,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                creationflags=NO_WINDOW_FLAGS,
             )
             try:
                 stdout, _stderr = await asyncio.wait_for(
