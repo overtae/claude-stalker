@@ -60,19 +60,18 @@ See `.claude/skills/*/SKILL.md` for details.
 
 ## Version Management
 
-**Keep all version locations in sync** when bumping versions:
+**Single source of truth: the root `VERSION` file.** Never hand-edit versions elsewhere.
 
-| Location | File |
-|----------|------|
-| Root package | `pyproject.toml` |
-| Backend | `backend/pyproject.toml` |
-| Backend OpenAPI | `backend/app/config.py` (`VERSION` — derived via `importlib.metadata`, no manual bump needed) |
-| Hooks | `hooks/pyproject.toml` |
-| Hooks CLI | `hooks/src/claude_office_hooks/main.py` (`__version__` — derived via `importlib.metadata`, no manual bump needed) |
-| Frontend package | `frontend/package.json` |
-| Frontend display | `frontend/src/app/page.tsx` (header badge) |
-| OpenCode plugin | `opencode-plugin/package.json` |
+```bash
+make bump-version VERSION=x.y.z   # write VERSION and sync every location
+make version-sync                 # after editing VERSION by hand
+make version-check                # CI: fail if any location drifts from VERSION
+```
 
-To bump all manual locations at once: `make bump-version VERSION=x.y.z` (rewrites the
-manual rows above; the two derived rows — backend `VERSION` and hooks `__version__` —
-follow the installed package automatically). CI cross-check: `make version-check` (ARC-021).
+| Location | How it gets the version |
+|----------|-------------------------|
+| `pyproject.toml`, `backend/pyproject.toml`, `hooks/pyproject.toml` | synced by `scripts/bump_version.py` |
+| `frontend/package.json`, `opencode-plugin/package.json` | synced by `scripts/bump_version.py` |
+| Frontend header badge | `next.config.ts` reads `frontend/package.json` → `NEXT_PUBLIC_APP_VERSION` |
+| Backend `VERSION`, hooks `__version__` | `importlib.metadata` (installed package) |
+| Desktop installers | `scripts/build_desktop.py` reads `VERSION` |

@@ -6,7 +6,7 @@
 	build-static frontend-build-static \
 	docker-build docker-up docker-down docker-logs docker-shell docker-config \
 	pre-commit pre-commit-update depsupdate depsshow uv-lock uv-sync setup resetup remove-venv \
-	bump-version version-check help
+	bump-version version-sync version-check help
 
 # Detect package manager: prefer bun if available, otherwise use npm
 PKG_MGR := $(shell command -v bun >/dev/null 2>&1 && echo "bun" || echo "npm")
@@ -226,7 +226,10 @@ ifndef VERSION
 endif
 	uv run --no-project python scripts/bump_version.py $(VERSION)
 
-version-check:			# Verify all version locations agree (CI-friendly)
+version-sync:			# Sync all version locations from the root VERSION file
+	uv run --no-project python scripts/bump_version.py --sync
+
+version-check:			# Verify all version locations match VERSION (CI-friendly)
 	uv run --no-project python scripts/bump_version.py --check
 
 # Pre-commit

@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
+import packageJson from "./package.json";
 
 const nextConfig: NextConfig = {
   // Enable static export for production builds
   output: "export",
+  // Header badge version — synced from the root VERSION file (make version-sync)
+  env: {
+    NEXT_PUBLIC_APP_VERSION: packageJson.version,
+  },
   // Disable image optimization (not supported in static export)
   images: {
     unoptimized: true,

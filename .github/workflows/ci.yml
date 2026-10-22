@@ -17,6 +17,7 @@ jobs:
       - run: cd backend && uv sync
       - run: make -C backend checkall
       - run: cd backend && uv run ruff check ../scripts
+      - run: make version-check
 
   frontend:
     runs-on: ubuntu-latest

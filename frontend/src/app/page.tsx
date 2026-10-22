@@ -136,7 +136,12 @@ export default function V2TestPage(): React.ReactNode {
     handleSimulate,
     handleReset,
     handleRenameSession,
-  } = useSessionSwitch({ sessionId, setSessionId, fetchSessions, showStatus });
+  } = useSessionSwitch({
+    sessionId,
+    setSessionId,
+    fetchSessions,
+    showStatus,
+  });
 
   // ------------------------------------------------------------------
   // Store subscriptions
@@ -458,15 +463,13 @@ export default function V2TestPage(): React.ReactNode {
             </button>
           )}
           <h1
-            className={`font-bold text-white tracking-tight flex items-center gap-2 ${
-              isMobile ? "text-lg" : "text-2xl"
-            }`}
+            className={`font-bold text-white tracking-tight flex items-center gap-2 ${isMobile ? "text-lg" : "text-2xl"}`}
           >
             <span className="text-teal-500">Claude</span>{" "}
             {!isMobile && t("app.title")}
             {!isMobile && (
               <span className="text-xs font-mono font-normal px-2 py-0.5 bg-slate-800 rounded text-slate-400 border border-slate-700">
-                v0.25.0
+                v{process.env.NEXT_PUBLIC_APP_VERSION}
               </span>
             )}
           </h1>
@@ -493,9 +496,7 @@ export default function V2TestPage(): React.ReactNode {
         {isMobile && (
           <div className="flex items-center gap-2">
             <div
-              className={`w-2 h-2 rounded-full ${
-                isConnected ? "bg-emerald-400 animate-pulse" : "bg-rose-500"
-              }`}
+              className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-400 animate-pulse" : "bg-rose-500"}`}
             />
             <span className="text-xs text-slate-400 font-mono">
               {agentCount} {t("header.agents")}

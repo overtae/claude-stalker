@@ -19,7 +19,6 @@ import platform
 import shutil
 import subprocess
 import sys
-import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -43,8 +42,7 @@ def step(msg: str) -> None:
 
 
 def version() -> str:
-    data = tomllib.loads((BACKEND / "pyproject.toml").read_text(encoding="utf-8"))
-    return str(data["project"]["version"])
+    return (ROOT / "VERSION").read_text(encoding="utf-8").strip()
 
 
 def build_frontend(skip: bool) -> None:
