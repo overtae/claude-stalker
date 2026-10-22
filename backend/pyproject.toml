@@ -1,6 +1,6 @@
 [project]
 name = "claude-stalker"
-version = "0.25.1"
+version = "0.25.4"
 description = "Cozy isometric office that shows what Claude Code is doing, live"
 readme = "README.pypi.md"
 requires-python = ">=3.13"
